@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+<!--
+	preprocesor files ready to distribute
+-->
+    <files>
+        <echo>
+            <![CDATA[<% point_start('hat');echo
+'----------------------------------------------------------------------------
+$Id: '.$version.'
+ Rev: '.$svn_revision.', Modified: '.$svn_modified.'
+ SVN: '.$svn_url.'$
+----------------------------------------------------------------------------
+'.$license.'
+----------------------------------------------------------------------------'; point_finish() ;%>]]>
+        </echo>
+
+    </files>
+    
+	<files dstdir="$dst">
+        <file >point.ext.php</file>
+        <file >preprocessor.class.php</file>
+        <file >preprocessTask.php</file>
+        <file >wiki.ext.php</file>
+	</files>
+
+</config>

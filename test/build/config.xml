@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<var name="version">1.0</var>
+	<files>
+		<file>module.html</file>
+	</files>
+	<files dstdir="build">
+		<file>config.xml</file>
+		<file>test.php</file>
+	</files>
+</config>
