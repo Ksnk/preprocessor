@@ -85,7 +85,7 @@ require_once 'phing/Task.php';
 
         public function init() {
             $this->preprocessor=new preprocessor();
-            echo 'All clear!';
+            //echo 'All clear!';
             $_GLOBAL['points']=array();//$points
         }
 

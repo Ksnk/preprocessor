@@ -367,6 +367,18 @@ class preprocessor{
 		$this->obstart();
 		return '?'.'>'.$s;
 	}
+
+    private function decode(&$s,$code){
+        if(!empty($code)){// iconv conversion
+            list($from,$to)=explode(':',$code.':');
+            if(empty($from)){
+                $from=mb_detect_encoding($s);
+            }
+            $this->debug("\n convert from '",$from,"' to '",$to,"'\n");
+            if(!empty($from) && !empty($to))
+                $s=iconv($from,$to.'//IGNORE',$s);
+        }
+    }
 	
 	/**
 	 * switch php tags back
@@ -389,15 +401,7 @@ class preprocessor{
             if(is_file($dst))
                 $this->debug(array(filemtime($dst),max($time,$this->cfg_time()),true));
             if(!is_file($dst) || (filemtime($dst)<max($time,$this->cfg_time()))){
-                if(!empty($code)){// iconv conversion
-                    list($from,$to)=explode(':',$code.':');
-                    if(empty($from)){
-                        $from=mb_detect_encoding($s);
-                    }
-                    $this->debug("\n convert from '",$from,"' to '",$to,"'\n");
-                    if(!empty($from) && !empty($to))
-                        $s=iconv($from,$to.'//IGNORE',$s);
-                }
+                decode($s,$code);
                 // удаляем пустые комментарии - последствия корявой обработки вставки секций
                 file_put_contents($dst,preg_replace(array('~^\s*/\*\*/\s*$~m','~\s*/\*\s*\*/~'),array('',''),
                     str_replace("\xEF\xBB\xBF", '',trim($s))
@@ -493,7 +497,7 @@ class preprocessor{
 					}
 				case 'copy':
 					if(empty($dstfile))break;
-					$___s=pathinfo($dstfile);$this->debug( ' dst -"'.$dstfile.'" ',$___s);
+					$___s=pathinfo($dstfile);$this->debug( '!dst -"'.$dstfile.'" ',$___s);
                     //print_r($___s);
 					if(!empty($___s['dirname']) && !is_dir($___s['dirname']))
 						mkdir($___s['dirname'], 0777 ,true);
@@ -504,7 +508,12 @@ class preprocessor{
                     $this->debug(array($mtime,filemtime($srcfile)));
                     if(!is_file($dstfile) || (filemtime($dstfile)<filemtime($srcfile))){
                         $this->log(2,  "c>$srcfile");
-						copy($srcfile,$dstfile);
+                        if(!empty($___m[3]['code'])){
+                            $s=file_get_contents($srcfile);
+                            $this->decode($s,$___m[3]['code']);
+                            file_put_contents($dstfile,$s);
+                        } else
+						    copy($srcfile,$dstfile);
 						$this->betouch ($dstfile,filemtime($srcfile));
                         if (strlen($srcfile)+strlen($dstfile)>75){
                             $this->log(2,  "\n\r  ");
