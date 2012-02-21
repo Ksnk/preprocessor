@@ -17,10 +17,11 @@ $Id: '.$version.'
 
     </files>
     
-	<files dstdir="$dst">
+	<files dstdir="$dst" dir="src">
         <file >point.ext.php</file>
         <file >preprocessor.class.php</file>
         <file >preprocessTask.php</file>
+        <copy >markdown.filter/*.*</copy>
         <file >wiki.ext.php</file>
 	</files>
 

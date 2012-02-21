@@ -110,7 +110,7 @@ class writer_Text extends MlWriter{
      */
     function writeText($ml,$options=array()){
         $this->opt($options);
-        $res= preg_replace('#\n *(?:\n *)+(\n *)#',"\n\\1",str_replace("\x1e",' ',$this->renderTag($ml)));
+        $res= preg_replace('#\n *(?:\n *)+(\n *)#',"\n\\1",str_replace("\x1f",' ',$this->renderTag($ml)));
         $this->opt();
         return $res;
     }
@@ -186,7 +186,7 @@ class writer_Text extends MlWriter{
      * @return string
      */
     function handle_icode($ml){
-        return '`'.str_replace(' ',"\x1e",$ml->value.$this->renderTag($ml->childs)).'`';
+        return '`'.str_replace(' ',"\x1f",$ml->value.$this->renderTag($ml->childs)).'`';
     }
 
     /**

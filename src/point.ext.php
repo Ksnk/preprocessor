@@ -11,7 +11,12 @@ class POINT {
     static private
         $points=array(),
         $cur_point='',
-        $ob_count=0;
+        $ob_count=0,
+
+        $point_stat=array();
+    static public
+        $eval_src='',
+        $eval_idx=0;
 
 /**
  * Добавить в "точку" содержимое файла с обработкой препроцессором
@@ -65,6 +70,10 @@ class POINT {
     	if (empty($contents)) return;
     	if(!isset(self::$points[self::$cur_point]))
             self::$points[self::$cur_point]=array();
+
+        if(isset(self::$point_stat[(self::$eval_idx++).' '.self::$eval_src]))
+            return;
+        self::$point_stat[(self::$eval_idx++).' '.self::$eval_src]=true;
         self::$points[self::$cur_point][]=preg_replace('/^\s+|^\*\/|\s+$|\/\*$/','',$contents);
     }
 
@@ -79,12 +88,13 @@ class POINT {
      * @param string $filter
      * @return mixed|string
      */
-    static function get($point_name, $filter=''){
+    static function get($point_name, $filters=''){
     	global $preprocessor;
     	//echo "insert_point $point_name */\n\r";
     	$s='';
     	if(isset(self::$points[$point_name]))
     	  $s= join(self::$points[$point_name],"\r\n");
+        foreach(explode('|',$filters) as $filter) {
         if($filter=='' || $filter=='comment'){
             $ss=$preprocessor->obget();
             if(preg_match('~(\s+\*)\s*$|(/\*)\s*$|(//)\s*$|(\#\#\s*)$~',$ss,$m)){
@@ -106,13 +116,14 @@ class POINT {
     		case 'wiki-txt':
     			include_once("wiki.ext.php");
                 $s=iconv('UTF-8', 'CP1251//IGNORE',$s);
-    			return wiki_parcer::convert($s,'txt');
+    			$s= wiki_parcer::convert($s,'txt');
     			break;
             case 'markdown-html':
                 $dir=dirname(__FILE__);
                 include_once $dir . DIRECTORY_SEPARATOR . 'markdown.filter/markdown.php';
 
-                return $html=Markdown($s);
+                $s=Markdown($s);
+                break;
             case 'markdown-txt':
                 $dir=dirname(__FILE__);
                 //return 'xxx';
@@ -130,55 +141,59 @@ class POINT {
                // } catch (Exception $e){
                //     echo($e->getMessage());
                // }
-                return $txt;
+                $s= $txt;
                 break;
     		case 'wiki-html':
     			include_once("wiki.ext.php");
-    			return wiki_parcer::convert($s,'html');
+                $s= wiki_parcer::convert($s,'html');
     			break;
             case 'line_comment':
                 // перед строкой стоит строковый комменарий - выводим с новой строки
-                return ' ----point::'.$point_name."----\r\n".$s."\r\n";
+                $s= ' ----point::'.$point_name."----\r\n".$s."\r\n";
             case 'everyline_comment':
                  // каждая строка начинается с комментария //
-                 return trim(preg_replace(
+                $s= trim(preg_replace(
     				array('/\n/'),
     				array("\n// "),
     				$s))."\r\n";
     			break;
             case 'tplcomment':
                  // каждая строка начинается с комментария ##
-                 return trim(preg_replace(
+                $s= trim(preg_replace(
     				array('/\n/'),
     				array("\n## "),
     				$s))."\r\n";
     			break;
     		case 'jscomment':
-    			return trim(preg_replace(
+                $s= trim(preg_replace(
     				array('/\n/'),
     				array("\n * "),
     				$s))."\r\n";
     			break;
     		case 'php_comment':
     			// выводим php код в окружении закрывающего - открывающего комментария
-    			return '*/
+                $s= '*/
     			'.$s.'
     			/*';
+                break;
     		case 'html2js':
     			// выводим html для вставки в изображение строки с двойными кавычками.
     			// TODO: добавить резку текста по длине строки
     			// TODO: работа со скриптами и стилями нужна?
-    			return preg_replace(
+                $s= preg_replace(
     				array('/"/','/\\\\/','/\\s\\s+/','/^\\s+|\\s+$/m'),
     				array('\"','\\\\',' ',''),
     		 		$s);
+                break;
     		case 'css2js':
     			// выводим css для вставки в изображение строки с двойными кавычками.
-    			return preg_replace(
+                $s= preg_replace(
     				array('/\/\*.*\*\//ms','/\/\/.*?/','/"/','/\\\\/','/\\s\\s+/','/^\\s+|\\s+$/m'),
     				array('',' ','\"','\\\\',' ',''),
     				$s);
+                break;
     	}
+        }
     	return $s;
     }
 

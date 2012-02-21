@@ -512,6 +512,8 @@ class preprocessor{
                         if (is_file($srcfile)){
                             chdir(dirname($srcfile));//$this->debug('xml_read:',getcwd());
                         }
+                        POINT::$eval_src=$srcfile;
+                        POINT::$eval_idx=0;
                         eval($___s);
                         chdir($oldcwd)  ;
 						if (empty($dstfile)){
