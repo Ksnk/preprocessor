@@ -6,7 +6,10 @@
  * -- если первый символ строки - пробельный - эту строку нельзя форматировать
  * -- первый символ == строка - заголовок, уровень заголовка определяется количеством =
  *
- * <%=point('hat','comment')%>
+ * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
+ *  Rev: $WCREV$, Modified: $WCDATE$
+ *  SVN: $WCURL$
+ * @license License MIT (c) Serge Koriakin - Jule 2010-2012
  */
 /**
  * @class wiki-parcer
@@ -101,11 +104,15 @@ class wiki_parcer{
 		}
 		return $result;
 	}
-	/**
-	 * отбить влево параграф. Строки не более $size символов. справа и слева отступы
-	 * @param string $s
-	 * @param integer $size
-	 */
+
+    /**
+     * отбить влево параграф. Строки не более $size символов. справа и слева отступы
+     * @param string $s
+     * @param integer $size
+     * @param int $left
+     * @param int $right
+     * @return string
+     */
 	function jLeft($s,$size=80,$left=0,$right=0) {
 		$result='';
 		$leftspaces="";

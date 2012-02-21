@@ -2,14 +2,17 @@
 /**
  * preprocessor Phing task
  *
- * <%=point('hat','comment');%>
+ * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
+ *  Rev: $WCREV$, Modified: $WCDATE$
+ *  SVN: $WCURL$
+ * @license License MIT (c) Serge Koriakin - Jule 2010-2012
  */
 /**
  * just a comment
  */
 $dir=dirname(__FILE__);
-include_once ($dir.DIRECTORY_SEPARATOR."preprocessor.class.php");
-include_once ($dir.DIRECTORY_SEPARATOR."point.ext.php");
+include_once ($dir . DIRECTORY_SEPARATOR . "preprocessor.class.php");
+include_once ($dir . DIRECTORY_SEPARATOR . "point.ext.php");
 
  //   date_default_timezone_set('Europe/Moscow');
 
@@ -90,7 +93,7 @@ require_once 'phing/Task.php';
         }
 
         public function main() {
-            $this->log('<%=$version%>', Project::MSG_INFO);
+            $this->log('PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1', Project::MSG_INFO);
             // define a force tag
             $time=false;
             if($this->force){

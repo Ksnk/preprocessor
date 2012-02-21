@@ -2,12 +2,15 @@
 /**
  * to call preprocesor - type   php -f preprocessor.php file_name
  * 
- * <%=point('hat','comment');%>
+ * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
+ *  Rev: $WCREV$, Modified: $WCDATE$
+ *  SVN: $WCURL$
+ * @license License MIT (c) Serge Koriakin - Jule 2010-2012
  *
  */
 $dir=dirname(__FILE__);
-include_once ($dir.DIRECTORY_SEPARATOR."preprocessor.class.php");
-include_once ($dir.DIRECTORY_SEPARATOR."point.ext.php");
+include_once ($dir . DIRECTORY_SEPARATOR . "preprocessor.class.php");
+include_once ($dir . DIRECTORY_SEPARATOR . "point.ext.php");
 
     date_default_timezone_set('Europe/Moscow');
 /**
@@ -24,8 +27,7 @@ foreach($_ENV as $k=>$v){
     $preprocessor->export('env_'.$k,$v);
 };
 
-echo '<%=$version%>
-
+echo 'PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
 
 ';
 $arg='';

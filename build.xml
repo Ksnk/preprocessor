@@ -5,7 +5,7 @@
     <target name="property">
         <echo file="svn.prop" append="false"><![CDATA[
 version=PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
-license=License GNU/LGPL - Serge Koriakin - Jule 2010-2012
+license=License MIT (c) Serge Koriakin - Jule 2010-2012
 svn_revision=$WCREV$
 svn_modified=$WCDATE$
 svn_url=$WCURL$
@@ -18,7 +18,7 @@ svn_url=$WCURL$
         </exec>
     </target>
 	<!--
-	   to make a SVN revision number by using TortoiseSVN installed.
+	   to make a SVN revision number by using TortoiseSVN.
 	   google with "TortoiseSVN SubWCRev" for detail.
 	-->
 	<target name="init" depends="property">
@@ -48,7 +48,7 @@ svn_url=$WCURL$
         <property name="dst" value="build"/>
         <property name="config" value="config.xml"/>
         <exec
-            command="${php_exe} -q ../preprocessor/preprocessor.php /Psvn.prop /force='${svn_modified}' /Dtarget=${target} /Ddst=${dst} ${config}"
+            command="${php_exe} -q ../preprocessor/src/preprocessor.php /Psvn.prop /force='${svn_modified}' /Dtarget=${target} /Ddst=${dst} ${config}"
             checkreturn="true"
             logoutput="true"/>
 

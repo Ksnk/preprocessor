@@ -2,10 +2,10 @@
 /**
  * main preprocessor class + xml reader-parcer
  *
- * <%=point('hat','comment');
-
-
- %>
+ * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
+ *  Rev: $WCREV$, Modified: $WCDATE$
+ *  SVN: $WCURL$
+ * @license License MIT (c) Serge Koriakin - Jule 2010-2012
  */
 $stderr = fopen('php://stderr', 'w');
 
@@ -17,42 +17,79 @@ class preprocessor{
         $logLevel=2,
         $logs=array('');
 
-    static $attrStore=array();
+    protected $options=array();
 
     /**
-     * function to hold info about atributes
-     * @param string $name - name of parameter to return
-     * @return string - value of attribute
+     * установка-получение параметров с сохранением предыдущего и откатом
+     * @usage opt('a','b','c') - получить список параметров `list($a,$b,$c)=$this->opt('a','b','c')жё
+     * @usage opt('a') - вернуть значение параметра 'a'
+     * @usage opt(array('a'=>1,'b'=>2)) - установить параметры a,b и запомнить предыдущее состояние
+     * @usage opt() - восстановить предыдущее состояние
+     * @param $attr
+     * @param null $value
+     * @return  mixed
      */
-    public function attr($name,$default=''){
-        if('dstdir'==$name or 'dir'===$name){ // combine path with /
-            $x=array();
-            foreach(self::$attrStore as $v){
-                if(!empty($v[$name]) && ($v[$name]!='.')){
-                    array_unshift($x,rtrim($this->evd($v[$name]),'/\\'));
-                }
-            }
-            if(!empty($default))
-                $x[]=$this->evd($default);
-            return implode('/',$x);
-        } else if('depend'==$name){ // combine values with ;
-            $x=array();
-            foreach(self::$attrStore as $v){
-                if(!empty($v[$name]) && ($v[$name]!='.')){
-                    array_unshift($x,$this->evd($v[$name]));
-                }
-            }
-            if(!empty($default))
-                $x[]=$this->evd($default);
-            return implode(';',$x);
-        } else {  // first notempty
-            foreach(self::$attrStore as $v){
-                $vv=trim((string)$v[$name]);
-                if(!empty($vv))
-                    return $this->evd($vv);
+    protected function opt($attr=null,$value=null){
+        static $save=array();
+        if(is_null($attr)) {
+            if(count($save)>0)
+            $this->options=array_pop($save);
+        }
+        else if(is_object($attr) || is_array($attr)) {
+            array_push($save,$this->options);
+            if(!empty($attr)){
+                $attr=$this->handle_attr($attr);
+                $this->options=array_merge($this->options,$attr);
             }
         }
-        return $default;
+        elseif(is_null($value)){
+            if(!isset($this->options[$attr]))
+                return '';
+            else
+                return $this->options[$attr];
+        } else {
+            $res=array();
+            foreach(func_get_args() as $v){
+                if (isset($this->options[$v]))
+                    $res[]=$this->options[$v];
+                else
+                    $res[]=null;
+            }
+            return $res;
+        }
+        return null;
+    }
+
+    /**
+     * корректировка параметров
+     * @param $attr
+     * @return mixed|string
+     */
+
+    function handle_attr($attr){
+        $result=array();
+        foreach($attr as $name=>$v){
+            $name=$this->evd($name);
+            $v=$this->evd($v);
+            switch($name){
+                case 'dstdir':
+                case 'dir': // наращиваем соответствующий параметр на это значение
+                    if(preg_match('#[^<>%]#',$v)){
+                        $old=rtrim($this->opt($name),'/');
+                        if(!empty($old) && !empty($v))
+                            $v=$this->opt($name).'/'.$v;
+                    }
+                    break;
+                case 'depend':
+                    $old=rtrim($this->opt($name),';');
+                    if(!empty($old) && !empty($v))
+                        $v=$this->opt($name).';'.$v;
+                    break;
+            }
+            $result[$name]=$v;
+        }
+        $this->debug($result);
+        return $result;
     }
 
 	/**
@@ -89,8 +126,8 @@ class preprocessor{
 	 */	
     public function newpair($src,$dst='',$act='eval',$par=''){
         if(empty($par))$par=array();
-
-        $this->debug(print_r(array($src,$dst,$act,$par),true));
+        $dst=preg_replace('#(\\/)\.\1#','\1',$dst);
+       // $this->debug(print_r(array($src,$dst,$act,$par),true));
 
         $this->store[]=array($src,$dst,$act,$par);
     }
@@ -112,6 +149,7 @@ class preprocessor{
      * @return bool
      */
     function betouch($file, $time){
+        if(preg_match('/<>/',$file)) return false;
         if(touch($file, $time)){
             clearstatcache();
             $stored_mtime = $time+$time-filemtime($file);
@@ -145,35 +183,6 @@ class preprocessor{
 	}
 	
 	/**
-	 * split part of pathname into real pathname
-	 * array - means first nonempty
-	 * all the rest nonempty parameter just splited with / sign
-	 * so you can call it width
-	 *  (path,,somethere,[,, again,onesmore]) and got 'path/somethere/again' route
-	 * this uses to simplify calculation of filepath with all this xlm-property  
-	 */
-	private function path(){
-		$path=array();
-		foreach(func_get_args() as $arg){
-			if(is_array($arg)){	// get a first non empty arg
-				$x=''; 
-				foreach($arg as $a){
-					if(!(empty($a) || $a=='.')){
-						$x=$this->evd($a);
-						break;	
-					}
-				};
-				$arg=$x;
-			} ;
-			
-			$v=rtrim($this->evd($arg),'/\\');
-			$path_res=empty($v) || $v=='.';
-			if(!$path_res) $path[]=$v;
-		}
-		return implode('/',$path);
-	} 
-	
-	/**
 	 * some oop handlers to simplify work with new tags
 	 */
 	
@@ -191,9 +200,11 @@ class preprocessor{
 			if (isset($this->exported_var[(string)$files['name']])) 
 				return ;
 		}
-		$val=$this->path((string)$files,(string)$files['default']);
+		$val=(string)$files;
+        if(empty($val))
+            $val=(string)$files['default'];
 		if(!empty($val))
-		$this->export((string)$files['name'],$val);
+		    $this->export((string)$files['name'],$val);
 	} 
 	
 	/**
@@ -273,24 +284,24 @@ class preprocessor{
 		if($insertbefore){
 			$sav=$this->store; $this->store=array();
 		}
-        array_unshift(self::$attrStore,$config->attributes());
+        $this->opt($config->attributes());
 		foreach($config->children() as $files){
-            array_unshift(self::$attrStore,$files->attributes());
+            $this->opt($files->attributes());
 			$name='handle_'.strtolower($files->getName());
 			if(method_exists($this,$name)){
 				call_user_func_array(array($this,$name),array(&$files));
 			} else
 			if ($files->getName()=='files'){
                 foreach ($files->children() as $file){
-                    array_unshift(self::$attrStore,$file->attributes());
-                    $dst=$this->attr('dstdir');
+                    $this->opt($file->attributes());
+                    $dst=$this->opt('dstdir');
                     $attributes=array();
                     foreach($file->attributes() as $k=>$v){
                         $attributes[$k]=(string)$v;
                     }
-                    $attributes['code']=$this->attr('code');
-                    $attributes['force']=$this->attr('force');
-                    $depend=$this->attr('depend');
+                    $attributes['code']=$this->opt('code');
+                    $attributes['force']=$this->opt('force');
+                    $depend=$this->opt('depend');
                     if(!empty($depend)){
                         $depends=explode(';',$depend);
                         $xtime=0;
@@ -310,28 +321,51 @@ class preprocessor{
                         $dst.='/'.dirname((string)$file);
                     }
 					if ($file->getName()=='echo'){
+                        list($dst,$name)=$this->opt('dstdir','name');
+                        if(!empty($dst)){
+                            if(empty($name) && preg_match('#[\w\.\\\/#',$file)){
+                                $name=basename($file);
+                            }
+                            $dst.='/'.$name;
+                        }
                         $this->newpair(
 							(string)$file,
-							!empty($dst)?$this->path($dst,$this->attr('name',(string)$file)):'',
+							$dst,
 							$file->getName()
                             ,$attributes);
-					} else
-					foreach(glob($this->attr('dir',(string)$file)) as $a){
-                        $name=$this->attr('name',basename($a));
- 						$this->newpair(
-							realpath ($a),
-							!empty($dst)?$this->path($dst,$this->attr('name',basename($a))):'',
-							$file->getName()
-                            ,$attributes);
-					}
+					} else {
+                        $dir=$this->opt('dir');
+                        if(!empty($dir)){
+                            $dir=rtrim($dir,'\\/').'/';
+                        }
+                       // $this->log(2,$dir.(string)$file);
+                        $pdir='';
+                        if(""!=dirname((string)$file)){
+                            $pdir=dirname((string)$file).'/';
+                        }
+                        foreach(glob($dir.(string)$file) as $a){
+                            list($dst,$name)=$this->opt('dstdir','name');
+                            if(!empty($dst)){
+                                if(empty($name)){
+                                    $name=basename($a);
+                                }
+                                $dst.='/'.$pdir.$name;
+                            }
+                            $this->newpair(
+                                realpath ($a),
+                                $dst,
+                                $file->getName()
+                                ,$attributes);
+                        }
+                    }
 
-                    array_shift(self::$attrStore);
+                    $this->opt();
 				}
 			}
-            array_shift(self::$attrStore);
+            $this->opt();
 		}
-        array_shift(self::$attrStore);
-		if($insertbefore){
+        $this->opt();
+        if($insertbefore){
 			$this->store=array_merge($sav,$this->store);
 		}
         //$this->debug(print_r($this,true));
@@ -397,11 +431,11 @@ class preprocessor{
 		$this->obend();
 		if(!empty($dst)){
 			$x=pathinfo($dst);
-			if(!is_dir($x['dirname']))mkdir($x['dirname'], 0777 ,true);
+            if(!is_dir($x['dirname']))mkdir($x['dirname'], 0777 ,true);
             if(is_file($dst))
                 $this->debug(array(filemtime($dst),max($time,$this->cfg_time()),true));
             if(!is_file($dst) || (filemtime($dst)<max($time,$this->cfg_time()))){
-                decode($s,$code);
+                $this->decode($s,$code);
                 // удаляем пустые комментарии - последствия корявой обработки вставки секций
                 file_put_contents($dst,preg_replace(array('~^\s*/\*\*/\s*$~m','~\s*/\*\s*\*/~'),array('',''),
                     str_replace("\xEF\xBB\xBF", '',trim($s))
@@ -449,7 +483,7 @@ class preprocessor{
 			if(is_array($error)){
 				break;
 			}
-            $this->debug('xxx-'.print_r($___m,true));
+            //$this->debug('xxx-'.print_r($___m,true));
 			$srcfile=$___m[0];
 			$dstfile=$___m[1];
 			$___all_cnt++;
@@ -497,10 +531,12 @@ class preprocessor{
 					}
 				case 'copy':
 					if(empty($dstfile))break;
-					$___s=pathinfo($dstfile);$this->debug( '!dst -"'.$dstfile.'" ',$___s);
+					$___s=pathinfo($dstfile);//$this->debug( '!dst -"'.$dstfile.'" ',$___s);
                     //print_r($___s);
-					if(!empty($___s['dirname']) && !is_dir($___s['dirname']))
+					if(!empty($___s['dirname']) && !is_dir($___s['dirname'])){
+                        $this->log(2,$___s['dirname']);
 						mkdir($___s['dirname'], 0777 ,true);
+                    }
                     if(is_file($dstfile))
                         $mtime=@filemtime($dstfile);
                     else

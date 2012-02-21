@@ -1,58 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<config>
-<!--
-	complete set of source files
--->
-	<files dstdir="$dst/src">
-		<copy>build.xml</copy>
-		<copy>config.xml</copy>
-		<copy>readme.txt</copy>
-		<copy>*.php</copy>
-	</files>
+<config >
 
 <!-- 
 	preprocesor files ready to distribute
 -->
     <files>
         <echo>
-            <![CDATA[<% point_start('hat');echo
-'@version '.$version.'<br>
-         Rev: '.$svn_revision.', Modified: '.$svn_modified.'<br>
-         SVN: '.$svn_url.'
+            <![CDATA[<% POINT::inline('hat',
+'@version '.$version.'
+ Rev: '.$svn_revision.', Modified: '.$svn_modified.'
+ SVN: '.$svn_url.'
 @license '.$license.'
-'; point_finish() ;%>]]>
+') ;%>]]>
         </echo>
 
     </files>
     
-	<files dstdir="$dst">
+	<files dstdir="$dst" dir="src">
          <file>readme.txt</file>
 		<echo name="history.txt">
-            <![CDATA[<%=point('history');%>]]>
+            <![CDATA[<%=POINT::get('history');%>]]>
         </echo>
-        <echo name="howto.txt">
-            <![CDATA[<%=point('cookbook','wiki-txt');%>]]>
+        <echo name="readme.html">
+           <![CDATA[<% echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>'
+           .POINT::get('readme','markdown-html').'</body></html>';%>]]>
         </echo>
-        
-		<file >*.php</file>
+ 		<file >*.php</file>
+        <copy >markdown.filter/*.*</copy>
 
 	</files>
-<!-- lz документации -->
-    <files code=":cp1251" dstdir="$dst/doc.src">
+<!-- для документации -->
+    <files code=":cp1251" dstdir="$dst/doc.src" dir="src">
    		<echo name="history.txt">
-           <![CDATA[<%=point('history');%>]]>
+           <![CDATA[<%=POINT::get('history');%>]]>
         </echo>
-        <echo name="howto.txt">
-           <![CDATA[<%=point('cookbook','wiki-txt');%>]]>
-        </echo>
-
    		<file >*.php</file>
    	</files>
 
-    <files dstdir="$dst/phing">
+    <files dstdir="$dst/phing" dir="src">
         <file >point.ext.php</file>
         <file >preprocessor.class.php</file>
         <file >preprocessTask.php</file>
+        <copy >markdown.filter/*.*</copy>
         <file >wiki.ext.php</file>
     </files>
 
