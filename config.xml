@@ -8,9 +8,9 @@
     <files>
         <echo>
             <![CDATA[<%
-            $version="PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com).1";
+            $version="PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com)";
             $license="License MIT - Serge Koriakin - Jule 2010-2012";
-            // get a last tag from output
+            // get the last tag from output
             $output=array();
             $tag = exec($git." describe --tags", $output);
             //$GLOBALS['preprocessor']->log(2,'',$tag."\n");
