@@ -166,34 +166,34 @@ $dst/Debug/HackerConsole
 
 Вот, вроде и все, если про ajax пока забыть…
 
-А теперь, со всем этим хозяйством начнем взлетать. Соединим все конструктивные части фенечки в одном файле, однако разделим эти конструктивные части конструкциями point_start и point_finish.
+А теперь, со всем этим хозяйством начнем взлетать. Соединим все конструктивные части фенечки в одном файле, однако разделим эти конструктивные части конструкциями POINT::start и POINT::finish.
 
       <html>
       <head>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
       <title>fenechka module</title>
       <script type=”text/javascript”>
-          <% point_start('js_body'); %>
+          <% POINT::start('js_body'); %>
           function Fenechka(){
 
           }
-          <% point_start('js_onload'); %>
+          <% POINT::start('js_onload'); %>
           Fenechka();
-          <% point_finish(); %>
+          <% POINT::finish(); %>
       </script>
 
       <style type=”text/css”>
-          <% point_start('css_style'); %>
+          <% POINT::start('css_style'); %>
           #fenechka { visible:none;}
-          <% point_finish(); %>
+          <% POINT::finish(); %>
       </style>
       </head>
 
       <body>
-      <% point_start('html_body'); %>
+      <% POINT::start('html_body'); %>
 
       <div id="fenechka">Hello world!</div>
-          <% point_finish(); %>
+          <% POINT::finish(); %>
       </div>
 
       </body>
@@ -286,14 +286,14 @@ $dst/Debug/HackerConsole
 
         <files>
                 <echo>
-                    <![CDATA[<% point_start('hat');echo
+                    <![CDATA[<% POINT::inline('hat',
         '----------------------------------------------------------------------------
         $Id: '.$version.'
          Rev: '.$svn_revision.', Modified: '.$svn_modified.'
          SVN: '.$svn_url.'$
         ----------------------------------------------------------------------------
         '.$license.'
-        ----------------------------------------------------------------------------'; point_finish() ;%>]]>
+        ----------------------------------------------------------------------------') ;%>]]>
                 </echo>
 
             </files>
@@ -372,7 +372,7 @@ $dst/Debug/HackerConsole
      %>
      */
      ...
-     /* <% point("css_site"); %> */
+     /* <% POINT::get("css_site"); %> */
      ...
 
 в файле config.xml нужно в секции, которая отвечает за генерацию нужного файла поставить параметр `depend`. Тогда при изменении зависимого файла будет автоматически перегенерироваться основной.
@@ -408,7 +408,7 @@ $dst/Debug/HackerConsole
 
 * комментарии // - большинство языков
 
-        // <%=point('mypoint','comment');%>
+        // <%=POINT::get('mypoint','comment');%>
 
     получится
 
@@ -418,7 +418,7 @@ $dst/Debug/HackerConsole
 
 * комментарии ## - язык шаблонов, основаный на Django-шаблонах
 
-        ## <%=point('mypoint','comment');%>
+        ## <%=POINT::get('mypoint','comment');%>
 
 
         ## Часть проекта ABCDEFG,
@@ -428,7 +428,7 @@ $dst/Debug/HackerConsole
     каждая новая строчка вставляемого текста будет снабжена соответствующим комментарием
 
         /**
-         * <%=point('mypoint','comment');%>
+         * <%=POINT::get('mypoint','comment');%>
          */
 
     каждая новая строчка текста будет снабжена * в нужной позиции.
