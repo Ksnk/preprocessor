@@ -22,7 +22,7 @@ if not "%1"=="" goto next
 rem 
 rem  target to make all at once
 rem 
-set PAR=init,phing
+set PAR=init
 
 :dolist
 
@@ -55,11 +55,6 @@ echo building init
 %PHPBIN% -q  %PROCESSOR% /Ddst=build /Dtarget=release config.xml
 exit /b 0
 
-:phing
-
-echo building phing
-%PHPBIN% -q  %PROCESSOR% /Ddst=build /Dtarget=phing config.phing.xml
-exit /b 0
 
 rem
 rem errors

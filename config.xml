@@ -36,7 +36,7 @@ ver: '.$tag.', Last build: '.$buildtime.'
         </echo>
     </files>
     
-	<files dstdir="$dst" dir="src">
+	<files dstdir="$dst">
         <file>readme.txt</file>
 		<echo name="history.txt">
             <![CDATA[<%=POINT::get('history');%>]]>
@@ -45,17 +45,11 @@ ver: '.$tag.', Last build: '.$buildtime.'
            <![CDATA[<% echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>'
            .POINT::get('readme','markdown-html').'</body></html>';%>]]>
         </echo>
- 		<file >*.php</file>
-        <copy >markdown.filter/*.*</copy>
-
 	</files>
-<!-- для документации -->
-    <files code=":cp1251" dstdir="$dst/doc.src" dir="src">
-   		<echo name="history.txt">
-           <![CDATA[<%=POINT::get('history');%>]]>
-        </echo>
-   		<file >*.php</file>
-   	</files>
+    <files dstdir="$dst" dir="src">
+        <file >*.php</file>
+        <copy >markdown.filter/*.*</copy>
+    </files>
 
     <files dstdir="$dst/phing" dir="src">
         <file >point.ext.php</file>
