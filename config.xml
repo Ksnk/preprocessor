@@ -8,8 +8,8 @@
     <files>
         <echo>
             <![CDATA[<%
-            $version="Some word about my application";
-            $license="some word about license";
+            $version="PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com).1";
+            $license="License MIT - Serge Koriakin - Jule 2010-2012";
             // get a last tag from output
             $output=array();
             $tag = exec($git." describe --tags", $output);
@@ -21,7 +21,7 @@
             $output=array();    exec($git." status -uno -s", $output);
             $status='';
             if(""!=(trim($modified=preg_replace("#\n+#","\n",preg_replace('#^.*?build/.*?$#m','',implode("\n",$output)))))){
-                $GLOBALS['preprocessor']->log(2,$modified."\n");
+                $GLOBALS['preprocessor']->log(2,'"'.$modified."\"\n");
                 $status="status : draft build.\n";
             };
             $buildtime=date('ymdHi'); POINT::inline('hat',
