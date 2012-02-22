@@ -215,6 +215,11 @@ class writer_Text extends MlWriter{
      */
     function handle_link(&$ml){
         $x=html_entity_decode(trim($this->renderTag($ml->childs)));
+        $href=$ml->attr['href'];
+        if(empty($href)) return '';
+        if(preg_match('/^#/',$href)){
+            return $x;
+        }
         if($x==$ml->attr['href']){
             return '<'.$x.'> ';
         } else {

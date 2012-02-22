@@ -1,11 +1,11 @@
 <?php
 /**
  * main preprocessor class + xml reader-parcer
- *
- * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
- *  Rev: $WCREV$, Modified: $WCDATE$
- *  SVN: $WCURL$
- * @license License MIT (c) Serge Koriakin - Jule 2010-2012
+ * <%=POINT::get('hat','comment');
+
+
+
+%>
  */
 $stderr = fopen('php://stderr', 'w');
 
@@ -172,13 +172,18 @@ class preprocessor{
 		else
 			return $m[0];
 	}
-	/** 
-	 * eval string with dollar sign, with default value (just for fun)...
-	 * variables stored into 'exported_var' array. 
-	 */
+
+    /**
+     * eval string with dollar sign, with default value (just for fun)...
+     * variables stored into 'exported_var' array.
+     * @param $s
+     * @param string $default
+     * @return mixed|string
+     */
 	private function evd($s,$default=''){
 		if(empty($s)) return $default;
-		if(strpos($s,'$')===FALSE) return (string)$s;
+        if(strpos($s,'$')===FALSE) return (string)$s;
+
 		return preg_replace_callback('/\$(?:(\w*)|\{([\w\.\[\]]*)\})/',array($this,'tmp_callback'),$s);
 	}
 	
@@ -317,8 +322,10 @@ class preprocessor{
                         }
                         $attributes['xtime']=$xtime;
                     }
-                    if(!empty($dst) && dirname((string)$file)!=''){
-                        $dst.='/'.dirname((string)$file);
+
+                    $str_file=$this->evd((string)$file);
+                    if(!empty($dst) && !preg_match('#[^\w\.\\/]#',$str_file) && dirname($str_file)!=''){
+                        $dst.='/'.dirname($str_file);
                     }
 					if ($file->getName()=='echo'){
                         list($dst,$name)=$this->opt('dstdir','name');
@@ -329,7 +336,7 @@ class preprocessor{
                             $dst.='/'.$name;
                         }
                         $this->newpair(
-							(string)$file,
+                            (string)$file,
 							$dst,
 							$file->getName()
                             ,$attributes);
@@ -340,10 +347,10 @@ class preprocessor{
                         }
                        // $this->log(2,$dir.(string)$file);
                         $pdir='';
-                        if(""!=dirname((string)$file)){
-                            $pdir=dirname((string)$file).'/';
+                        if(""!=dirname($str_file)){
+                            $pdir=dirname($str_file).'/';
                         }
-                        foreach(glob($dir.(string)$file) as $a){
+                        foreach(glob($dir.$str_file) as $a){
                             list($dst,$name)=$this->opt('dstdir','name');
                             if(!empty($dst)){
                                 if(empty($name)){
@@ -564,10 +571,10 @@ class preprocessor{
 		}
 		$error = error_get_last();
 		if(is_array($error)){
-			fwrite($GLOBALS['stderr'],
+            $this->log(1,
 	    	sprintf('Error: %s(%s) module raised "%s" '."\n\r"
 	        	,realpath($this->srcfile), $error['line'], $error['message'])
-            .print_r(debug_backtrace(false,4),true));
+            .print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),true));
 		}
         $this->log(1,sprintf("
 total %s of %s files copied.\n\r",$___total_cnt,$___all_cnt));

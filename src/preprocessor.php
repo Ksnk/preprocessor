@@ -2,11 +2,11 @@
 /**
  * to call preprocesor - type   php -f preprocessor.php file_name
  * 
- * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
- *  Rev: $WCREV$, Modified: $WCDATE$
- *  SVN: $WCURL$
- * @license License MIT (c) Serge Koriakin - Jule 2010-2012
- *
+ * <%=POINT::get('hat','comment');
+
+
+
+%>
  */
 $dir=dirname(__FILE__);
 include_once ($dir . DIRECTORY_SEPARATOR . "preprocessor.class.php");
@@ -22,6 +22,7 @@ include_once ($dir . DIRECTORY_SEPARATOR . "point.ext.php");
 function pps(&$p,$def){return empty($p)?$def:$p;}
 
 $preprocessor=new preprocessor();
+$GLOBALS['preprocessor']=$preprocessor;
 
 foreach($_ENV as $k=>$v){
     $preprocessor->export('env_'.$k,$v);
@@ -60,7 +61,7 @@ while(!empty($arg)){
                 }
             }
         } else {
-            $preprocessor->error('no such a file "'.$m[1].'"');
+            $preprocessor->log(1,'no such a file "'.$m[1].'"');
         }
         $arg=trim(substr($arg,strlen($m[0])));
     } elseif(preg_match('/^\s*\/D([\.\w]+)\=\'([^\']+)\'/',$arg,$m)){

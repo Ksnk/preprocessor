@@ -2,80 +2,63 @@
 <project name="preprocessor" default="init">
     <taskdef name="preprocess" classname="phing.tasks.ext.preprocessor.preprocessTask" />
 
-    <target name="property">
-        <echo file="svn.prop" append="false"><![CDATA[
-version=PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
-license=License MIT (c) Serge Koriakin - Jule 2010-2012
-svn_revision=$WCREV$
-svn_modified=$WCDATE$
-svn_url=$WCURL$
-]]>        </echo>
-        <exec executable="SubWCRev" dir=".">
-            <arg file="." />
-            <arg file="svn.prop" />
-            <arg file="svn.prop" />
-            <arg value="-f" />
-        </exec>
-    </target>
 	<!--
 	   to make a SVN revision number by using TortoiseSVN.
 	   google with "TortoiseSVN SubWCRev" for detail.
 	-->
-	<target name="init" depends="property">
+	<target name="init" >
         <property file="../env.prop"/>
-        <property file="svn.prop"/>
         <property name="target" value="release"/>
         <property name="dst" value="build"/>
         <property name="config" value="config.xml"/>
         <exec
-            command="${php_exe} -q ../preprocessor/build/preprocessor.php /Psvn.prop /force='force' /Dtarget=${target} /Ddst=${dst} ${config}"
+            command="${php_exe} -q ../preprocessor/build/preprocessor.php /Dtarget=${target} /Ddst=${dst} ${config}"
             checkreturn="true"
             logoutput="true"/>
 
         <delete file="svn.prop"/>
-		<zip destfile="./preprocessor.zip">
+        <delete file="preprocessor.tar.gz"/>
+        <tar destfile="preprocessor.tar.gz" compression="gzip">
             <fileset dir="build">
                 <include name="**/*.*"/>
+                <exclude name="doc.src/**"/>
             </fileset>
-        </zip>
+        </tar>
 	</target>
 
 
-    <target name="prebuild" depends="property">
+    <target name="prebuild" >
         <property file="../env.prop"/>
-        <property file="svn.prop"/>
         <property name="target" value="release"/>
         <property name="dst" value="build"/>
         <property name="config" value="config.xml"/>
         <exec
-            command="${php_exe} -q ../preprocessor/src/preprocessor.php /Psvn.prop /force='${svn_modified}' /Dtarget=${target} /Ddst=${dst} ${config}"
+            command="${php_exe} -q ../preprocessor/src/preprocessor.php  /Dtarget=${target} /Ddst=${dst} ${config}"
             checkreturn="true"
             logoutput="true"/>
 
         <delete file="svn.prop"/>
     </target>
 
-    <target name="phing" depends="property">
+    <target name="phing">
         <property file="../env.prop"/>
-        <property file="svn.prop"/>
         <property name="target" value="phing"/>
         <property name="dst" value="z:/usr/local/php5/pear/phing/classes/phing/tasks/ext/preprocessor"/>
         <property name="config" value="config.phing.xml"/>
         <exec
-            command="${php_exe} -q ../preprocessor/build/preprocessor.php /Psvn.prop /force='${svn_modified}' /Dtarget=${target} /Ddst=${dst} ${config}"
+            command="${php_exe} -q ../preprocessor/build/preprocessor.php  /Dtarget=${target} /Ddst=${dst} ${config}"
             checkreturn="true"
             logoutput="true"/>
 
         <delete file="svn.prop"/>
     </target>
 
-    <target name="test" depends="property,phing">
+    <target name="test" depends="phing">
 
         <preprocess config="config.xml">
             <param name="dst" value="debug"/>
             <param name="level" value="debug"/>
             <param name="target" value="debug"/>
-            <param file="svn.prop"/>
         </preprocess>
         <delete file="svn.prop"/>
     </target>

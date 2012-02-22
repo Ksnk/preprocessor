@@ -2,10 +2,11 @@
 /**
  * preprocessor Phing task
  *
- * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
- *  Rev: $WCREV$, Modified: $WCDATE$
- *  SVN: $WCURL$
- * @license License MIT (c) Serge Koriakin - Jule 2010-2012
+ * <%=POINT::get('hat','comment');
+
+
+
+%>
  */
 /**
  * just a comment
@@ -88,6 +89,7 @@ require_once 'phing/Task.php';
 
         public function init() {
             $this->preprocessor=new preprocessor();
+            $GLOBALS['preprocessor']=$this->preprocessor;
             //echo 'All clear!';
             $_GLOBAL['points']=array();//$points
         }

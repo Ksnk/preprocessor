@@ -3,18 +3,36 @@
 <!--
 	preprocesor files ready to distribute
 -->
+    <var name="git" default="git"/>
     <files>
         <echo>
-            <![CDATA[<% POINT::start('hat');echo
+            <![CDATA[<%
+            $version="PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com).1";
+            $license="License MIT - Serge Koriakin - Jule 2010-2012";
+            // get a last tag from output
+            $output=array();
+            $tag = exec($git." describe --tags", $output);
+            //$GLOBALS['preprocessor']->log(2,'',$tag."\n");
+            // get a last string from output
+            $output=array();
+            $git_url = exec($git." remote -v", $output);
+            // get all output & filter him
+            $output=array();    exec($git." status -uno -s", $output);
+            $status='';
+            if(""!=(trim($modified=preg_replace("#\n+#","\n",preg_replace('#^.*?build/.*?$#m','',implode("\n",$output)))))){
+                $GLOBALS['preprocessor']->log(2,$modified."\n");
+                $status="status : draft build.\n";
+            };
+            $buildtime=date('ymdHi'); POINT::inline('hat',
 '----------------------------------------------------------------------------
-$Id: '.$version.'
- Rev: '.$svn_revision.', Modified: '.$svn_modified.'
- SVN: '.$svn_url.'$
+$Id: '.$version.',
+ver: '.$tag.', Last build: '.$buildtime.'
+'.$status.'GIT: '.$git_url.'$
 ----------------------------------------------------------------------------
 '.$license.'
-----------------------------------------------------------------------------'; POINT::finish() ;%>]]>
+----------------------------------------------------------------------------') ;
+%>]]>
         </echo>
-
     </files>
     
 	<files dstdir="$dst" dir="src">

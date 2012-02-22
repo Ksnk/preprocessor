@@ -226,6 +226,42 @@ $dst/Debug/HackerConsole
 
 ## Рецепты##
 
+### У меня проект на github. ###
+
+Одна из проблем git - нет понятия "номер ревизии", которое присутствует в SVN. В SVN оно настолько удобно, что многие пользуются им вместо младшего номера версии. Оказывается, не все так сложно с git. Номер ревизии там тоже есть. Его можно полцучить командой `git describe --tags`. Ну и еще немного команд...
+
+Создайте с config.xml секцию:
+
+        <var name="git" default="git"/>
+        <files>
+            <echo>
+                <![CDATA[<%
+                $version="Some word about my application";
+                $license="some word about license";
+                // get a last tag from output
+                $tag = exec($git." describe --tags", $output=array());
+                // get a last string from output
+                $git_url = exec($git." remote -v", $output=array());
+                // get all output & filter him
+                $output=array();    exec($git." status -uno -s", $output);
+                $status='';
+                if(""!=(trim($modified=preg_replace("#\n+#","\n",preg_replace('#^.*?build/.*?$#m','',implode("\n",$output)))))){
+                    $status="status : draft build.\n";
+                };
+                $GLOBALS['preprocessor']->log(2,'',$git."\n");
+                $buildtime=date('ymdHi'); POINT::inline('hat',
+    '----------------------------------------------------------------------------
+    $Id: '.$version.',
+    ver: '.$tag.', Last build: '.$last_build.'
+    '.$status.'GIT: '.$git_url.'$
+    ----------------------------------------------------------------------------
+    '.$license.'
+    ----------------------------------------------------------------------------') ;%>]]>
+            </echo>
+        </files>
+
+В результате, в точке с именем 'HAT' будет лежать что-то, примерно такого вида
+
 
 ### Как вставить "шапку" в каждый файл проекта###
 

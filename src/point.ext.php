@@ -1,10 +1,11 @@
 <?php
 /**
  * POINTS (MACRO OOP) mechanism for PHP preperocessor
- * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
- *  Rev: $WCREV$, Modified: $WCDATE$
- *  SVN: $WCURL$
- * @license License MIT (c) Serge Koriakin - Jule 2010-2012
+ * <%=POINT::get('hat','comment');
+
+
+
+%>
  */
 
 class POINT {
@@ -31,16 +32,20 @@ class POINT {
 
     /**
      * Добавить в "точку" содержимое переменной с обработкой препроцессором
-      * именованный буфер $point_name
-     * @param string $point_name
+     * именованный буфер $point_name
+     * @param $name string $point_name
+     * @param $contents
      * @return void
      */
-    static function inline($point_name,$contents){
-        //echo $contents;
+    static function inline($name,$contents){
         if (empty($contents)) return;
-        if(!isset(self::$points[$point_name]))
-            self::$points[$point_name]=array();
-        self::$points[$point_name][]=preg_replace('/^\s+|^\*\/|\s+$|\/\*$/','',$contents);
+        if(!isset(self::$points[$name]))
+            self::$points[$name]=array();
+
+     //   if(isset(self::$point_stat[self::$eval_src.'_'.(self::$eval_idx++)]))
+     //       return;
+        self::$point_stat[self::$eval_src.'_'.(self::$eval_idx)]=true;
+        self::$points[$name][]=preg_replace('/^\s+|^\*\/|\s+$|\/\*$/','',$contents);
     }
 
     /**
@@ -67,14 +72,7 @@ class POINT {
     	$contents=ob_get_contents();
     	ob_end_clean();
     	//echo $contents;
-    	if (empty($contents)) return;
-    	if(!isset(self::$points[self::$cur_point]))
-            self::$points[self::$cur_point]=array();
-
-        if(isset(self::$point_stat[(self::$eval_idx++).' '.self::$eval_src]))
-            return;
-        self::$point_stat[(self::$eval_idx++).' '.self::$eval_src]=true;
-        self::$points[self::$cur_point][]=preg_replace('/^\s+|^\*\/|\s+$|\/\*$/','',$contents);
+        self::inline(self::$cur_point,$contents);
     }
 
     static function insert($point_name){

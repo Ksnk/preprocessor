@@ -6,10 +6,11 @@
  * -- если первый символ строки - пробельный - эту строку нельзя форматировать
  * -- первый символ == строка - заголовок, уровень заголовка определяется количеством =
  *
- * @version PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
- *  Rev: $WCREV$, Modified: $WCDATE$
- *  SVN: $WCURL$
- * @license License MIT (c) Serge Koriakin - Jule 2010-2012
+ * <%=POINT::get('hat','comment');
+
+
+
+%>
  */
 /**
  * @class wiki-parcer
