@@ -5,6 +5,9 @@
 
 
 
+
+
+
 %>
  */
 $stderr = fopen('php://stderr', 'w');
@@ -127,7 +130,7 @@ class preprocessor{
     public function newpair($src,$dst='',$act='eval',$par=''){
         if(empty($par))$par=array();
         $dst=preg_replace('#(\\/)\.\1#','\1',$dst);
-       // $this->debug(print_r(array($src,$dst,$act,$par),true));
+      //  $this->log(1,print_r(array($src,$dst,$act,$par),true));
 
         $this->store[]=array($src,$dst,$act,$par);
     }
@@ -270,6 +273,36 @@ class preprocessor{
 
      }
 
+    /**
+     * поддержка рекурсивной маски **
+     * @param $mask
+     * @param $arr
+     * @param $mask2
+     */
+    private function recstar($mask,&$arr,$mask2) {
+        $x=glob($mask.'*',GLOB_MARK+GLOB_ONLYDIR);
+        foreach($x as $a){
+            $arr[]=$a.$mask2;
+            $this->recstar($a,$arr,$mask2);
+        }
+    }
+
+    private function findByMask($mask){
+        $arr=array();
+        $xx=explode('**',$mask);
+        if(count($xx)==1){
+            $arr[]=$mask;
+        }else if(count($xx)==2){
+            $this->recstar($xx[0],$arr,rtrim($xx[1],'\\/'));
+        } else {
+            $this->log(1,sprintf('Wrong mask "%s". Only one recursion per mask allowed.'."\n",$mask));
+        }
+        $files=array();
+        foreach($arr as $m)
+            $files=array_merge($files,glob($m));
+        return array_unique($files);
+    }
+
 	
 	/**
 	 * read xml file and parse information. 
@@ -315,7 +348,7 @@ class preprocessor{
                             if ( $x && $x>0 ) {
                                 $xtime=max($x,$xtime);
                             } else {
-                                foreach(glob($d) as $a){
+                                foreach($this->findByMask($d) as $a){
                                     $xtime=max($xtime,filemtime($a));
                                 }
                             }
@@ -345,13 +378,16 @@ class preprocessor{
                         if(!empty($dir)){
                             $dir=rtrim($dir,'\\/').'/';
                         }
+                        if(strpos($dir,'*')!==FALSE){
+                            $this->log(1,sprintf("`dir` parameter can't contain `*` (%s) \n",$dir));
+                        }
                        // $this->log(2,$dir.(string)$file);
                         $pdir='';
-                        if(""!=dirname($str_file)){
-                            $pdir=dirname($str_file).'/';
-                        }
-                        foreach(glob($dir.$str_file) as $a){
+                        foreach($this->findByMask($dir.$str_file) as $a){
                             list($dst,$name)=$this->opt('dstdir','name');
+                            $pdir=dirname(substr($a,strlen($dir)));
+                            if(!empty($pdir)) $pdir.='/';
+
                             if(!empty($dst)){
                                 if(empty($name)){
                                     $name=basename($a);
@@ -438,6 +474,7 @@ class preprocessor{
 		$this->obend();
 		if(!empty($dst)){
 			$x=pathinfo($dst);
+           // $this->log(1,$dst,' ',$x['dirname'],"\n");
             if(!is_dir($x['dirname']))mkdir($x['dirname'], 0777 ,true);
             if(is_file($dst))
                 $this->debug(array(filemtime($dst),max($time,$this->cfg_time()),true));

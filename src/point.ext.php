@@ -41,10 +41,14 @@ class POINT {
         if (empty($contents)) return;
         if(!isset(self::$points[$name]))
             self::$points[$name]=array();
+        self::$eval_idx++;
+      //  $GLOBALS['preprocessor']->log(2,'try to hold "'.$name.'" file "'.substr(self::$eval_src,0,80).'" '.self::$eval_idx."\n");
 
-     //   if(isset(self::$point_stat[self::$eval_src.'_'.(self::$eval_idx++)]))
-     //       return;
-        self::$point_stat[self::$eval_src.'_'.(self::$eval_idx)]=true;
+        if(isset(self::$point_stat[self::$eval_src.'_'.self::$eval_idx])){
+            $GLOBALS['preprocessor']->log(2,'second try to hold "'.$name.'" file "'.substr(self::$eval_src,0,80).'" '.self::$eval_idx."\n");
+             return;
+        }
+        self::$point_stat[self::$eval_src.'_'.self::$eval_idx]=true;
         self::$points[$name][]=preg_replace('/^\s+|^\*\/|\s+$|\/\*$/','',$contents);
     }
 

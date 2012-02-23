@@ -33,7 +33,7 @@
         <property name="dst" value="build"/>
         <property name="config" value="config.xml"/>
         <exec
-            command="${php_exe} -q ../preprocessor/src/preprocessor.php  /Dtarget=${target} /Ddst=${dst} ${config}"
+            command="${php_exe} -q src/preprocessor.php  /Dtarget=${target} /Ddst=${dst} ${config}"
             checkreturn="true"
             logoutput="true"/>
 
