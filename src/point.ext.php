@@ -19,13 +19,17 @@ class POINT {
         $eval_src='',
         $eval_idx=0;
 
-/**
- * Добавить в "точку" содержимое файла с обработкой препроцессором
- * именованный буфер $point_name
- * @param string $point_name
- * @param $filename
- * @return void
- */
+    static private
+        $placeholder=array(),
+        $curplaceloder=0;
+
+    /**
+     * Добавить в "точку" содержимое файла с обработкой препроцессором
+     * именованный буфер $point_name
+     * @param string $point_name
+     * @param $filename
+     * @return void
+     */
     static function file($point_name,$filename){
     	self::inline($point_name,file_get_contents($filename));
     }
@@ -81,6 +85,20 @@ class POINT {
 
     static function insert($point_name){
     	echo "/****** point $point_name */\r\n".POINT::get($point_name)."/****finish point $point_name *//*\r\n";
+    }
+
+    static function _replace($m){
+        self::$placeholder[self::$curplaceloder]=$m[2];
+        return $m[1].'@'.self::$curplaceloder++.'@'.$m[3];
+    }
+    /**
+     * @XXX@ заменяем на placeholder
+     * @static
+     * @param $m
+     * @return string
+     */
+    static function _return($m){
+        return self::$placeholder[$m[1]];
     }
 
     /**
@@ -180,18 +198,43 @@ class POINT {
                 break;
     		case 'html2js':
     			// выводим html для вставки в изображение строки с двойными кавычками.
-    			// TODO: добавить резку текста по длине строки
-    			// TODO: работа со скриптами и стилями нужна?
+    			// $scripts
+                // коррекция NL
+                $s=str_replace(array("\r\n","\r"),array("\n","\n"),$s);
+                // чистим скрипты
+                $start=self::$curplaceloder;
+                $s=preg_replace_callback('#(<script[^>]*>)(.*?)(</script[^>]*>)#is',array('POINT','_replace'),$s);
+                for(;$start<self::$curplaceloder;$start++){
+                    self::$placeholder[$start]=
+                        str_replace("\n",'\n',
+                            preg_replace('#//.*$#m',"",
+                                preg_replace('#/\*.*\*/#s',"",
+                                    self::$placeholder[$start])
+                    ));
+                }
+                //стили
+                $start=self::$curplaceloder;
+                $s=preg_replace_callback('#(<style[^>]*>)(.*?)(</style[^>]*>)#is',array('POINT','_replace'),$s);
+                for(;$start<self::$curplaceloder;$start++){
+                    self::$placeholder[$start]=
+                        preg_replace('#\s+#'," ",
+                                preg_replace('#/\*.*\*/#s',"",
+                                    self::$placeholder[$start])
+                        );
+                }
+                // условные комментарии
+                $s=preg_replace_callback('#(<!--\[)(.*?)(\]-->)#is',array('POINT','_replace'),$s);
                 $s= preg_replace(
-    				array('/"/','/\\\\/','/\\s\\s+/','/^\\s+|\\s+$/m'),
-    				array('\"','\\\\',' ',''),
+    				array('/<!--.*?-->/s',"/\n/",'/"/','/\\\\/','/\\s\\s+/','/^\\s+|\\s+$/m'),
+    				array('','\n','\"','\\\\',' ',''),
     		 		$s);
+                $s=preg_replace_callback('#@(\d+)@#',array('POINT','_return'),$s);
                 break;
     		case 'css2js':
     			// выводим css для вставки в изображение строки с двойными кавычками.
                 $s= preg_replace(
-    				array('/\/\*.*\*\//ms','/\/\/.*?/','/"/','/\\\\/','/\\s\\s+/','/^\\s+|\\s+$/m'),
-    				array('',' ','\"','\\\\',' ',''),
+    				array('/<!--.*?-->/s','/\/\*.*\*\//s','/\/\/.*?/','/"/','/\\\\/','/\\s\\s+/','/^\\s+|\\s+$/m'),
+    				array('','',' ','\"','\\\\',' ',''),
     				$s);
                 break;
     	}
