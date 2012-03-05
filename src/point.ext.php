@@ -34,6 +34,11 @@ class POINT {
     	self::inline($point_name,file_get_contents($filename));
     }
 
+    static function clear(){
+        self::$points=array();
+        self::$point_stat=array();
+    }
+
     /**
      * Добавить в "точку" содержимое переменной с обработкой препроцессором
      * именованный буфер $point_name
@@ -49,8 +54,9 @@ class POINT {
       //  $GLOBALS['preprocessor']->log(2,'try to hold "'.$name.'" file "'.substr(self::$eval_src,0,80).'" '.self::$eval_idx."\n");
 
         if(isset(self::$point_stat[self::$eval_src.'_'.self::$eval_idx])){
-            $GLOBALS['preprocessor']->log(2,'second try to hold "'.$name.'" file "'.substr(self::$eval_src,0,80).'" '.self::$eval_idx."\n");
-             return;
+            preprocessor::log(2,'second try to hold "'.$name.'" file "'.substr(self::$eval_src,0,80).'" '
+                .self::$eval_idx."\n".print_r(self::$points,true));
+            return;
         }
         self::$point_stat[self::$eval_src.'_'.self::$eval_idx]=true;
         self::$points[$name][]=preg_replace('/^\s+|^\*\/|\s+$|\/\*$/','',$contents);
@@ -170,6 +176,7 @@ class POINT {
             case 'line_comment':
                 // перед строкой стоит строковый комменарий - выводим с новой строки
                 $s= ' ----point::'.$point_name."----\r\n".$s."\r\n";
+                break;
             case 'everyline_comment':
                  // каждая строка начинается с комментария //
                 $s= trim(preg_replace(
@@ -206,11 +213,10 @@ class POINT {
                 $s=preg_replace_callback('#(<script[^>]*>)(.*?)(</script[^>]*>)#is',array('POINT','_replace'),$s);
                 for(;$start<self::$curplaceloder;$start++){
                     self::$placeholder[$start]=
-                        str_replace("\n",'\n',
-                            preg_replace('#//.*$#m',"",
-                                preg_replace('#/\*.*\*/#s',"",
-                                    self::$placeholder[$start])
-                    ));
+                        preg_replace(array('#//.*$#m','#/\*.*?\*/#s',"/\n/",'/\s+/','#\s*(\\\\n\s*)+#')
+                            ,array("","",'\n',' ','\n'),
+                            self::$placeholder[$start]
+                    );
                 }
                 //стили
                 $start=self::$curplaceloder;
@@ -218,15 +224,17 @@ class POINT {
                 for(;$start<self::$curplaceloder;$start++){
                     self::$placeholder[$start]=
                         preg_replace('#\s+#'," ",
-                                preg_replace('#/\*.*\*/#s',"",
+                                preg_replace('#/\*.*?\*/#s',"",
                                     self::$placeholder[$start])
                         );
                 }
                 // условные комментарии
                 $s=preg_replace_callback('#(<!--\[)(.*?)(\]-->)#is',array('POINT','_replace'),$s);
+                // пробелы
                 $s= preg_replace(
-    				array('/<!--.*?-->/s',"/\n/",'/"/','/\\\\/','/\\s\\s+/','/^\\s+|\\s+$/m'),
-    				array('','\n','\"','\\\\',' ',''),
+    				array('/<!--.*?-->/s','/"/','/\\\\/','/\s+/'
+                    ,'#\s*(<|</)(body|div|br|script|style|option|dd|dt|dl|iframe)([^<]*>)\s*#is'),
+    				array('','\"','\\\\',' ','\1\2\3'),
     		 		$s);
                 $s=preg_replace_callback('#@(\d+)@#',array('POINT','_return'),$s);
                 break;

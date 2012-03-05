@@ -20,6 +20,12 @@ class preprocessor{
         $logLevel=2,
         $logs=array('');
 
+    static function instance(){
+        if(!isset($GLOBALS['preprocessor']))
+            $GLOBALS['preprocessor']=new preprocessor();
+        return $GLOBALS['preprocessor'];
+    }
+
     protected $options=array();
 
     /**
@@ -251,24 +257,25 @@ class preprocessor{
         }
     }
 
-     public function log($level=-1){
-        if($this->logLevel<$level) return ;
+     static public function log($level=-1){
+         $preprocessor=preprocessor::instance();
+        if($preprocessor->logLevel<$level) return ;
         $na=func_num_args();
         if($na>1){
             for ($i=1; $i<$na;$i++){
                 $v=func_get_arg($i);
                 if(is_array($v))
                     $v=print_r($v,true);
-                $this->logs[]= array($level,$v);
+                $preprocessor->logs[]= array($level,$v);
             }
         }
         //if($na==0){ print_r($this->logs);}
-        if(($this->obcnt==0) && count($this->logs)>0){
-            foreach($this->logs as $v){
+        if(($preprocessor->obcnt==0) && count($preprocessor->logs)>0){
+            foreach($preprocessor->logs as $v){
                 if(!empty($v[1]))
                     echo $v[1];
             }
-            $this->logs=array();
+            $preprocessor->logs=array();
         }
 
      }

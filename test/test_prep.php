@@ -7,7 +7,7 @@
 include_once ("../preprocessor.class.php");
 include_once ("../point.ext.php");
 
-$paths=new preprocessor();
+$paths=preprocessor::instance();
 $par=array("/Dtarget=debug"
 			,"/Ddst=build"
 			,"config.xml");

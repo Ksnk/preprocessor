@@ -1,5 +1,11 @@
 <?php
 
+
+if (!defined('PHPUnit_MAIN_METHOD')) {
+    ini_set('include_path',ini_get('include_path').PATH_SEPARATOR.dirname(dirname(__FILE__))) ;
+    require 'PHPUnit/Autoload.php' ;
+}
+
 include_once ("src/wiki.ext.php");
 include_once ("src/point.ext.php");
 include_once ("src/preprocessor.class.php");
@@ -25,6 +31,9 @@ class preprocessorTest extends PHPUnit_Framework_TestCase {
 <html>
 <script type="text/javascript">
 alert(11);// it's a joke
+/**
+ *   test1
+ */
 alert(2);
 /**
  *   document!
@@ -39,32 +48,59 @@ alert(2);
 Hello!
 </body>
 HTML;
-        $preprocessor=new preprocessor();
+        $result='<!doctype html> <html><script type=\"text/javascript\">\nalert(11);\nalert(2);\n</script><style> * {margin:0} </style><body>Hello!</body>';
+
+        $preprocessor=preprocessor::instance();
         $GLOBALS['preprocessor']=$preprocessor;
         POINT::inline('test',$data);
-        $this->assertEquals(POINT::get('test','html2js'),
-            '<!doctype html>\n<html>\n<script type=\"text/javascript\">\nalert(11);\nalert(2);\n\n</script>\n<style> * {margin:0} </style>\n<body>\n\nHello!\n</body>');
+        $this->assertEquals(POINT::get('test','html2js'), $result);
+        POINT::clear();
     }
 
     /**
-     * тестируем wiki разметку в препроцессоре
+     * ловим ошибку - вставка кода в // комментарии
      */
 
-    function testWiki1() {
-        $data='
-Hello world
-* one 
-* two
+    function testPOINTComment (){
+        $data=<<<HTML
+<?xml version='1.0' standalone='yes'?>
+<config>
+<files dstdir='tests'>
+    <echo name="xx.txt"><![CDATA[
+        /*
+<% POINT::start('xxx');%>
+    it's a text
+<% POINT::finish();%>
+ */
+// <%=POINT::get('xxx');%>
 
-just a sign
-        
-        ';
-        $this->assertEquals(
-            $this->wikitxt($data),
-            'if( \'hello\' ){ world };'
-        );
+## <%=POINT::get('xxx');%>
+/* <%=POINT::get('xxx');%> */
+]]></echo>
+    </files>
+</config>
+HTML;
+        $result=<<<HTML
+
+//  ----point::xxx----
+it's a text
+
+##  ----point::xxx----
+it's a text
+    			it's a text
+HTML;
+        $preprocessor=preprocessor::instance();
+        $preprocessor->xml_read($data);
+        $preprocessor->process();
+        $data=file_get_contents('tests/xx.txt');
+        $this->assertEquals($result,$data);
+        POINT::clear();
     }
 
-}
 
+}
+if (!defined('PHPUnit_MAIN_METHOD')) {
+    $suite = new PHPUnit_Framework_TestSuite('preprocessorTest');
+    PHPUnit_TextUI_TestRunner::run( $suite);
+}
 ?>

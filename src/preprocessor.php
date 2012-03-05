@@ -21,8 +21,7 @@ include_once ($dir . DIRECTORY_SEPARATOR . "point.ext.php");
  */
 function pps(&$p,$def){return empty($p)?$def:$p;}
 
-$preprocessor=new preprocessor();
-$GLOBALS['preprocessor']=$preprocessor;
+$preprocessor=preprocessor::instance();
 
 foreach($_ENV as $k=>$v){
     $preprocessor->export('env_'.$k,$v);
