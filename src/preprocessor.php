@@ -27,7 +27,7 @@ foreach($_ENV as $k=>$v){
     $preprocessor->export('env_'.$k,$v);
 };
 
-echo 'PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com). Ver : 1.1
+echo '<%=$version%>
 
 ';
 $arg='';

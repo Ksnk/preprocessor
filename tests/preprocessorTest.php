@@ -51,7 +51,6 @@ HTML;
         $result='<!doctype html> <html><script type=\"text/javascript\">\nalert(11);\nalert(2);\n</script><style> * {margin:0} </style><body>Hello!</body>';
 
         $preprocessor=preprocessor::instance();
-        $GLOBALS['preprocessor']=$preprocessor;
         POINT::inline('test',$data);
         $this->assertEquals(POINT::get('test','html2js'), $result);
         POINT::clear();

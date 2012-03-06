@@ -13,16 +13,17 @@
             // get the last tag from output
             $output=array();
             $tag = exec($git." describe --tags", $output);
-            //$GLOBALS['preprocessor']->log(2,'',$tag."\n");
+            //preprocessor::log(2,'',$tag."\n");
             // get a last string from output
             $output=array();
             $git_url = exec($git." remote -v", $output);
             // get all output & filter him
-            $output=array();    exec($git." status -uno -s", $output);
+            $output=array();    exec($git." status -uno -s", $output); $output =implode("\n",$output);
             $status='';
-            if(""!=(trim($modified=preg_replace("#\n+#","\n",preg_replace('#^.*?build/.*?$#m','',implode("\n",$output)))))){
-                $GLOBALS['preprocessor']->log(2,'"'.$modified."\"\n");
-                $status="status : draft build.\n";
+            if(""!=(trim($modified=preg_replace("#\n+#","\n",preg_replace('#^.*?build/.*?$#m','',$output))))){
+                preprocessor::log(2,'"'.$modified."\"\n");
+                if(preg_match('#src/\w#',$output))
+                    $status="status : draft build.\n";
             };
             $buildtime=date('ymdHi'); POINT::inline('hat',
 '----------------------------------------------------------------------------

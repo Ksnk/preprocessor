@@ -331,12 +331,14 @@ $dst/Debug/HackerConsole
                 // список измененных файлов для вывода в трассу
                 //
                 $output=array();    exec($git." status -uno -s", $output);
+                $output =implode("\n",$output);
                 $status='';
-                if(""!=(trim($modified=preg_replace("#\n+#","\n",
-                    preg_replace('#^.*?build/.*?$#m','',implode("\n",$output))
+                if(""!=(trim($modified=preg_replace("#\n+#","\n"
+                    ,preg_replace('#^.*?build/.*?$#m','',$output)
                 )))){
-                    $GLOBALS['preprocessor']->log(2,'"'.$modified."\"\n");
-                    $status="status : draft build.\n";
+                    preprocessor::log(2,'"'.$modified."\"\n");
+                    if(preg_match('#src/\w#',$output))
+                        $status="status : draft build.\n";
                 };
                 $buildtime=date('ymdHi'); POINT::inline('hat',
     '----------------------------------------------------------------------------

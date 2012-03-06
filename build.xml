@@ -94,4 +94,24 @@
         logoutput="true"/>
 
     </target>
+
+    <target name="update ksnk.github.com" description="copy builded files to ksnk.github folder">
+        <delete file="../ksnk.github.com/preprocessor/preprocessor.tar.gz"/>
+        <tar destfile="../ksnk.github.com/preprocessor/preprocessor.tar.gz" compression="gzip">
+            <fileset dir="build">
+                <include name="*.php" />
+                <include name="*.txt" />
+                <include name="*.html" />
+                <include name="markdown.filter/*.*" />
+                <include name="ping/*.*" />
+                <exclude name="doc.src/*.*" />
+            </fileset>
+        </tar>
+        <delete file="../ksnk.github.com/preprocessor/preprocessor.phing.tar.gz"/>
+        <tar destfile="../ksnk.github.com/preprocessor/preprocessor.phing.tar.gz" compression="gzip">
+            <fileset dir="build/phing">
+                <include name="**/*.*" />
+            </fileset>
+        </tar>
+    </target>
 </project>
