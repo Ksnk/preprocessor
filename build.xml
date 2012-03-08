@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="preprocessor" default="init">
+<project name="preprocessor" default="phing">
     <taskdef name="preprocess" classname="phing.tasks.ext.preprocessor.preprocessTask" />
 
 	<!--
@@ -15,15 +15,6 @@
             command="${php_exe} -q ../preprocessor/build/preprocessor.php /Dtarget=${target} /Ddst=${dst} ${config}"
             checkreturn="true"
             logoutput="true"/>
-
-        <delete file="svn.prop"/>
-        <delete file="preprocessor.tar.gz"/>
-        <tar destfile="preprocessor.tar.gz" compression="gzip">
-            <fileset dir="build">
-                <include name="**/*.*"/>
-                <exclude name="doc.src/**"/>
-            </fileset>
-        </tar>
 	</target>
 
 
@@ -40,21 +31,16 @@
         <delete file="svn.prop"/>
     </target>
 
-    <target name="phing">
-        <property file="../env.prop"/>
-        <property name="target" value="phing"/>
-        <property name="dst" value="z:/usr/local/php5/pear/phing/classes/phing/tasks/ext/preprocessor"/>
-        <property name="config" value="config.phing.xml"/>
-        <exec
-            command="${php_exe} -q ../preprocessor/build/preprocessor.php  /Dtarget=${target} /Ddst=${dst} ${config}"
-            checkreturn="true"
-            logoutput="true"/>
-
-        <delete file="svn.prop"/>
+    <target name="phing" depends="init">
+        <copy todir="z:/usr/local/php5/pear/phing/classes/phing/tasks/ext/preprocessor" overwrite="yes">
+            <fileset dir="build/phing">
+                <include name="*.*" />
+                <include name="**/*.*" />
+            </fileset>
+        </copy>
     </target>
 
     <target name="test" depends="phing">
-
         <preprocess config="config.xml">
             <param name="dst" value="debug"/>
             <param name="level" value="debug"/>
