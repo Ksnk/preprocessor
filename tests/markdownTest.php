@@ -26,10 +26,21 @@ MARKDOWN;
 <p>It's a trap</p>
 
 HTML;
-        $preprocessor=preprocessor::instance();
         POINT::clear();
         POINT::inline('test1',$data);
         $this->assertEquals(str_replace("\r\n","\n",$result),POINT::get('test1','markdown-html'));
+    }
+
+    function testMarkdown2 (){
+        $data=<<<MARKDOWN
+# Hello
+
+It's a trap
+MARKDOWN;
+        ;
+        POINT::clear();
+        POINT::inline('test1',$data);
+        $this->assertEquals(POINT::get('test1','markdown-txt'),POINT::get('test1','mark-txt'));
     }
 }
 

@@ -6,6 +6,40 @@
 -->
     <var name="git" default="git"/>
     <files>
+        <echo> <![CDATA[<%
+            // заполняем оглавление в readme.markdown
+            $readme_file="readme.markdown"  ;
+            $readme=file_get_contents($readme_file);
+            // для всех элементов оглавления - ## ### выставляем пункты
+            $p="\n\n";
+            preg_match_all('/^\s?\s?(#+)\s*(?:<a[^>]+>\s*(.*?)\s*#*\s*$/m',$readme,$m);
+            preprocessor::log(2,$m);
+            $start=false;
+            $toc=0;
+            foreach($m[0] as $k=>$v){
+                if($m[2][$k]=='Оглавление') {
+                    $start=true; continue;
+                } else if(!$start)
+                    continue;
+                $readme=preg_replace('/'.preg_quote($m[0][$k]).'/'
+                ,"\n".$m[1][$k].' <a name="toc'.(++$toc).'"/>'.$m[2][$k]."\n",$readme);
+                if($m[1][$k]=='###') $p.='    ';
+                $p.=  '* ['.$m[2][$k].'](#toc'.$toc.")\n";
+            }
+            preprocessor::log(2,$p);
+            // заменяем прошлое оглавление на новое
+            $readme=preg_replace('/(^\s*#+\s*Оглавление.*?$)([^#]+)/mu',
+                "\n".'## Оглавление'.$p."\n",$readme) ;
+
+            file_put_contents($readme_file,$readme);
+        %>]]></echo>
+    </files>
+
+
+
+
+
+    <files>
         <echo>
             <![CDATA[<%
             $version="PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com)";

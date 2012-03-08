@@ -161,6 +161,16 @@ class POINT
 
                     $s = Markdown($s);
                     break;
+                case 'mark-txt':
+                    $dir = dirname(__FILE__);
+                    include_once($dir . DIRECTORY_SEPARATOR . 'markdown.filter/MlObject.php');
+                    include_once $dir . DIRECTORY_SEPARATOR . 'markdown.filter/markdown2ml.php';
+                    include_once($dir . DIRECTORY_SEPARATOR . 'markdown.filter/ml2text.php');
+
+                    $reader = new reader_MARKDOWN();
+                    $writer = new writer_Text();
+                    $s = $writer->writeText($reader->parseMarkdown($s));
+                    break;
                 case 'markdown-txt':
                     $dir = dirname(__FILE__);
                     //return 'xxx';

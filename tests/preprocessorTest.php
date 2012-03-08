@@ -94,6 +94,7 @@ HTML;
         $data=file_get_contents('tests/xx.txt');
         $this->assertEquals($result,$data);
         POINT::clear();
+        unlink('tests/xx.txt') ;
     }
 
 
