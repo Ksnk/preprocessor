@@ -1,43 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config >
 
-<!-- 
-	preprocesor files ready to distribute
--->
-    <var name="git" default="git"/>
+    <!--
+        preprocesor files ready to distribute
+    -->
+    <var name="version">PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com)</var>
+    <var name="license">License MIT - Serge Koriakin - Jule 2010-2012</var>
 
-    <files>
-        <echo>
-            <![CDATA[<%
-            $version="PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com)";
-            $license="License MIT - Serge Koriakin - Jule 2010-2012";
-            // get the last tag from output
-            $output=array();
-            $tag = exec($git." describe --tags", $output);
-            //preprocessor::log(2,'',$tag."\n");
-            // get a last string from output
-            $output=array();
-            $git_url = exec($git." remote -v", $output);
-            // get all output & filter him
-            $output=array();    exec($git." status -uno -s", $output); $output =implode("\n",$output);
-            $status='';
-            if(""!=(trim($modified=preg_replace("#\n+#","\n",preg_replace('#^.*?build/.*?$#m','',$output))))){
-                preprocessor::log(2,'"'.$modified."\"\n");
-                if(preg_match('#src/\w#',$output))
-                    $status="status : draft build.\n";
-            };
-            $buildtime=date('ymdHi'); POINT::inline('hat',
-'----------------------------------------------------------------------------
-$Id: '.$version.',
-ver: '.$tag.', Last build: '.$buildtime.'
-'.$status.'GIT: '.$git_url.'$
-----------------------------------------------------------------------------
-'.$license.'
-----------------------------------------------------------------------------') ;
-%>]]>
-        </echo>
-    </files>
-    
+    <import name="git.hat.xml"/>
+
 	<files dstdir="$dst">
         <file>readme.txt</file>
 		<echo name="history.txt"  depend="readme.txt">
@@ -51,6 +22,11 @@ ver: '.$tag.', Last build: '.$buildtime.'
     <files dstdir="$dst" dir="src">
         <file >*.php</file>
         <copy >markdown.filter/*.*</copy>
+    </files>
+
+    <files dstdir="$dst" >
+        <copy >git.hat.xml</copy>
+        <copy >rebuild.readme.xml</copy>
     </files>
 
     <files dstdir="$dst/phing" dir="src">

@@ -8,7 +8,7 @@
         // для всех элементов оглавления - ## ### выставляем пункты
         $p="\n\n";
         preg_match_all('/^\s?\s?(#+)\s*(?:<a[^>]+>)?\s*(.*?)\s*#*\s*$/m',$readme,$m);
-        preprocessor::log(2,$m);
+        //preprocessor::log(2,$m);
         $start=false;
         $toc=0;
         foreach($m[0] as $k=>$v){
@@ -16,15 +16,16 @@
                 $start=true; continue;
             } else if(!$start)
                 continue;
-            $readme=preg_replace('/'.preg_quote($m[0][$k]).'/'
-            ,"\n".$m[1][$k].' <a name="toc'.(++$toc).'"/>'.$m[2][$k]."\n",$readme);
+            //preprocessor::log(2,'/'.preg_quote(trim($m[0][$k])).'/'."\n");
+            $readme=preg_replace('/'.preg_quote(trim($m[0][$k]),'/').'/'
+                ,$m[1][$k].' <a name="toc'.(++$toc).'"/>'.$m[2][$k],$readme);
             if($m[1][$k]=='###') $p.='    ';
             $p.=  '* ['.$m[2][$k].'](#toc'.$toc.")\n";
         }
-        preprocessor::log(2,$p);
+       // preprocessor::log(2,$p);
         // заменяем прошлое оглавление на новое
-        $readme=preg_replace('/(^\s*#+\s*Оглавление.*?$)([^#]+)/mu',
-            "\n".'## Оглавление'.$p."\n",$readme) ;
+        $readme=preg_replace('/(^\s*#+\s*Оглавление.*?$).*?(^#)/mu',
+            "\n".'## Оглавление'.$p.'\2',$readme) ;
 
         file_put_contents($readme_file,$readme);
         %>]]></echo>

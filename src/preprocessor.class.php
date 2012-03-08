@@ -555,6 +555,7 @@ class preprocessor
      */
     public function process()
     {
+        //self::log(2,$this->store);
         register_shutdown_function(array($this, '_handleFatal'));
         if (!empty($this->exported_var))
             extract($this->exported_var);
