@@ -7,8 +7,9 @@
  * To change this template use File | Settings | File Templates.
  */
 
-class MlHelper {
-    protected $options=array();
+class MlHelper
+{
+    protected $options = array();
 
     /**
      * установка-получение параметров с сохранением предыдущего и откатом
@@ -20,26 +21,27 @@ class MlHelper {
      * @param null $value
      * @return  mixed
      */
-    protected function opt($attr=null,$value=null){
-        static $save=array();
-        if(is_null($attr)) {
-            if(count($save)>0)
-            $this->options=array_pop($save);
+    protected function opt($attr = null, $value = null)
+    {
+        static $save = array();
+        if (is_null($attr)) {
+            if (count($save) > 0)
+                $this->options = array_pop($save);
         }
-        else if(is_array($attr)) {
-            array_push($save,$this->options);
-            if(!empty($attr))
-                $this->options=array_merge($this->options,$attr);
+        else if (is_array($attr)) {
+            array_push($save, $this->options);
+            if (!empty($attr))
+                $this->options = array_merge($this->options, $attr);
         }
-        elseif(is_null($value))
+        elseif (is_null($value))
             return $this->options[$attr];
         else {
-            $res=array();
-            foreach(func_get_args() as $v){
+            $res = array();
+            foreach (func_get_args() as $v) {
                 if (isset($this->options[$v]))
-                    $res[]=$this->options[$v];
+                    $res[] = $this->options[$v];
                 else
-                    $res[]=null;
+                    $res[] = null;
             }
             return $res;
         }
@@ -52,14 +54,17 @@ class MlHelper {
      * @param $need
      * @return mixed|string
      */
-    protected function razeSpaces($text,$need){
-        $x=explode(' ',trim($text));
+    protected function razeSpaces($text, $need)
+    {
+        $x = explode(' ', trim($text));
         // so we need to replace every space with (count($x)-1+need/(count($x)-1)) spaces
-        $result=array_shift($x);$cnt=count($x);
-        while(!empty($x)){
-            $spc=floor(($cnt+$need)/$cnt);
-            $need-=$spc-1;$cnt--;
-            $result.=str_repeat(' ',$spc).array_shift($x);
+        $result = array_shift($x);
+        $cnt = count($x);
+        while (!empty($x)) {
+            $spc = floor(($cnt + $need) / $cnt);
+            $need -= $spc - 1;
+            $cnt--;
+            $result .= str_repeat(' ', $spc) . array_shift($x);
         }
         return $result;
     }
@@ -71,16 +76,17 @@ class MlHelper {
      * @param $rest
      * @param $size
      */
-    protected function cutStr(&$text,&$rest,$size){
-        $rest='';
-        if($size<mb_strlen($text,MlObject::$code)) {
-            $i=strrpos (mb_substr($text,0,$size,MlObject::$code),' ');
-            if(FALSE==$i){
-                $i=strpos ($text,' ');
+    protected function cutStr(&$text, &$rest, $size)
+    {
+        $rest = '';
+        if ($size < mb_strlen($text, MlObject::$code)) {
+            $i = strrpos(mb_substr($text, 0, $size, MlObject::$code), ' ');
+            if (FALSE == $i) {
+                $i = strpos($text, ' ');
             }
-            if(FALSE!=$i) {
-                $rest=ltrim(substr($text,$i));
-                $text=substr($text,0,$i);
+            if (FALSE != $i) {
+                $rest = ltrim(substr($text, $i));
+                $text = substr($text, 0, $i);
             }
         }
     }
@@ -89,60 +95,63 @@ class MlHelper {
     {
         // Note: value of $name is case sensitive.
         throw new Exception("Calling object method '$name' "
-             . "\n");
+            . "\n");
     }
+
     /**  As of PHP 5.3.0  */
     public static function __callStatic($name, $arguments)
     {
         // Note: value of $name is case sensitive.
         throw new Exception("Calling static method '$name' "
-             . "\n");
+            . "\n");
     }
 
 
 }
 
-class MlWriter extends MlHelper {
+class MlWriter extends MlHelper
+{
 
 }
 
-class MlReader extends MlHelper {
+class MlReader extends MlHelper
+{
 
 }
 
 /**
  * helper class to hold MLObject
  * Block Elements
- Paragraphs and Line Breaks
- Headers
- Blockquotes
- Lists
- Code Blocks
- Horizontal Rules
+Paragraphs and Line Breaks
+Headers
+Blockquotes
+Lists
+Code Blocks
+Horizontal Rules
  * Span Elements
- Links
- Emphasis
- Code
- Images
+Links
+Emphasis
+Code
+Images
  */
-class MlObject {
-    static $code='utf8';
+class MlObject
+{
+    static $code = 'utf8';
 
-    static $block_types=array(
-        'para','header','quotes','list','code','hrule','br'
+    static $block_types = array(
+        'para', 'header', 'quotes', 'list', 'code', 'hrule', 'br'
     );
-    static $span_types=array(
-        'text','link','em','emp','icode','image','strong'
+    static $span_types = array(
+        'text', 'link', 'em', 'emp', 'icode', 'image', 'strong'
     );
 
 
     public
-        $type=''
-        ,$value=''
-        ,$level=0
-    ;
+        $type = ''
+    , $value = ''
+    , $level = 0;
     public
-        $childs=array(),
+        $childs = array(),
         $attr;
 
     /**
@@ -150,17 +159,18 @@ class MlObject {
      * @param string $value
      * @param array $childs
      */
-    function __construct($type='',$value='',$childs=array(),$attr=array()){
-        $this->attr=$attr;
-        if(is_array($type))
-            foreach($type as $k=>$v){
-                if(isset($this->$k))
-                    $this->$k=$v;
+    function __construct($type = '', $value = '', $childs = array(), $attr = array())
+    {
+        $this->attr = $attr;
+        if (is_array($type))
+            foreach ($type as $k => $v) {
+                if (isset($this->$k))
+                    $this->$k = $v;
             }
         else {
-            $this->type=$type;
-            $this->value=$value;
-            $this->childs=$childs;
+            $this->type = $type;
+            $this->value = $value;
+            $this->childs = $childs;
         }
     }
 }

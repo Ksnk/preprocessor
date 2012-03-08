@@ -2,10 +2,6 @@
 <project name="preprocessor" default="phing">
     <taskdef name="preprocess" classname="phing.tasks.ext.preprocessor.preprocessTask" />
 
-	<!--
-	   to make a SVN revision number by using TortoiseSVN.
-	   google with "TortoiseSVN SubWCRev" for detail.
-	-->
 	<target name="init" >
         <property file="../env.prop"/>
         <property name="target" value="release"/>
@@ -16,7 +12,6 @@
             checkreturn="true"
             logoutput="true"/>
 	</target>
-
 
     <target name="prebuild" >
         <property file="../env.prop"/>
