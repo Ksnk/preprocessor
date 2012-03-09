@@ -2,17 +2,38 @@
 <config >
 
     <!--
-        preprocesor files ready to distribute
+        filling a HAT ponit with info from GIT
+
+        git variable point to real GIT command you need to run at your computer.
     -->
     <var name="git" default="git"/>
+    <var name="svn" default="svn"/>
 
     <files>
-        <echo>
-            <![CDATA[<%
+        <echo><![CDATA[<%
+        if(is_dir('.svn')){
+        // so it's svn project
+            $output=array();
+            $info = exec($svn." info", $output); $output =implode("\n",$output);
+            preg_match('/URL:\s(.*)$/im',$output,$m);
+            $svn_url=$m[1];
+            preg_match('/Revision:\s(.*)$/im',$output,$m);
+            $svn_revision=$m[1];
+            preg_match('/Date:\s([\d- :\+]+)$/im',$output,$m);
+            $svn_modified=trim($m[1]);
+            POINT::inline('hat',
+'----------------------------------------------------------------------------
+$Id: '.$version.'
+ Rev: '.$svn_revision.', Modified: '.$svn_modified.'
+ SVN: '.$svn_url.'$
+----------------------------------------------------------------------------
+'.$license.'
+----------------------------------------------------------------------------') ;
+        }  else if(is_dir('.git')) {
+
             // get the last tag from output
             $output=array();
             $tag = exec($git." describe --tags", $output);
-            //preprocessor::log(2,'',$tag."\n");
             // get a last string from output
             $output=array();
             $git_url = exec($git." remote -v", $output);
@@ -20,7 +41,10 @@
             $output=array();    exec($git." status -uno -s", $output); $output =implode("\n",$output);
             $status='';
             if(""!=(trim($modified=preg_replace("#\n+#","\n",preg_replace('#^.*?build/.*?$#m','',$output))))){
+                // show modified files int log to help control versioning
                 preprocessor::log(2,'"'.$modified."\"\n");
+                // iа some src files changed but not comited - builded version marked as draft
+                // so it's impossible to restore a same version later if you need it.
                 if(preg_match('#src/\w#',$output))
                     $status="status : draft build.\n";
             };
@@ -32,6 +56,7 @@ ver: '.$tag.', Last build: '.$buildtime.'
 ----------------------------------------------------------------------------
 '.$license.'
 ----------------------------------------------------------------------------') ;
+        }
 %>]]>
         </echo>
     </files>

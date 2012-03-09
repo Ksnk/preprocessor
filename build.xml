@@ -84,7 +84,6 @@
                 <include name="*.txt" />
                 <include name="*.html" />
                 <include name="markdown.filter/*.*" />
-                <include name="ping/*.*" />
                 <exclude name="doc.src/*.*" />
             </fileset>
         </tar>
