@@ -25,7 +25,7 @@
         preprocessor::log(2,$p);
         // заменяем прошлое оглавление на новое
         $readme=preg_replace('/(^\s*#+\s*Оглавление).+?(?=[\n\r]#)/usm',
-            "\n".'## Оглавление'.$p."\n",$readme) ;
+            "\n".'## Оглавление'.$p,$readme) ;
 
         file_put_contents($readme_file,$readme);
         %>]]></echo>
