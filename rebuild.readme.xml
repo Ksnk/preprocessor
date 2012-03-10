@@ -22,10 +22,10 @@
             if($m[1][$k]=='###') $p.='    ';
             $p.=  '* ['.$m[2][$k].'](#toc'.$toc.")\n";
         }
-       // preprocessor::log(2,$p);
+        preprocessor::log(2,$p);
         // заменяем прошлое оглавление на новое
-        $readme=preg_replace('/(^\s*#+\s*Оглавление.*?$).*?(^#)/mu',
-            "\n".'## Оглавление'.$p.'\2',$readme) ;
+        $readme=preg_replace('/(^\s*#+\s*Оглавление).+?(?=[\n\r]#)/usm',
+            "\n".'## Оглавление'.$p."\n",$readme) ;
 
         file_put_contents($readme_file,$readme);
         %>]]></echo>
