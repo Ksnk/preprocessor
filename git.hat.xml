@@ -2,15 +2,18 @@
 <config >
 
     <!--
-        filling a HAT ponit with info from GIT
+        filling a `hat` ponit with info from GIT  or SVN. whatever your using
 
         git variable point to real GIT command you need to run at your computer.
+        svn variable point to real SVN command you need to run at your computer.
     -->
     <var name="git" default="git"/>
     <var name="svn" default="svn"/>
 
     <files>
         <echo><![CDATA[<%
+
+        $separator= str_repeat('-',90);
         if(is_dir('.svn')){
         // so it's svn project
             $output=array();
@@ -22,13 +25,13 @@
             preg_match('/Date:\s([\d- :\+]+)$/im',$output,$m);
             $svn_modified=trim($m[1]);
             POINT::inline('hat',
-'----------------------------------------------------------------------------
+$separator.'
 $Id: '.$version.'
  Rev: '.$svn_revision.', Modified: '.$svn_modified.'
  SVN: '.$svn_url.'$
-----------------------------------------------------------------------------
+'.$separator.'
 '.$license.'
-----------------------------------------------------------------------------') ;
+'.$separator) ;
         }  else if(is_dir('.git')) {
 
             // get the last tag from output
@@ -49,13 +52,22 @@ $Id: '.$version.'
                     $status="status : draft build.\n";
             };
             $buildtime=date('ymdHi'); POINT::inline('hat',
-'----------------------------------------------------------------------------
+$separator.'
 $Id: '.$version.',
 ver: '.$tag.', Last build: '.$buildtime.'
 '.$status.'GIT: '.$git_url.'$
-----------------------------------------------------------------------------
+'.$separator.'
 '.$license.'
-----------------------------------------------------------------------------') ;
+'.$separator) ;
+        } else { // WFT? Setup some version control quickly and start using. What are you waiting for?
+            $buildtime=date('ymdHi');
+            POINT::inline('hat',
+$separator.'
+$Id: '.$version.',
+Last build: '.$buildtime.'
+'.$separator.'
+'.$license.'
+'.$separator) ;
         }
 %>]]>
         </echo>
