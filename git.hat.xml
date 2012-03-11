@@ -4,8 +4,8 @@
     <!--
         filling a `hat` ponit with info from GIT  or SVN. whatever your using
 
-        git variable point to real GIT command you need to run at your computer.
-        svn variable point to real SVN command you need to run at your computer.
+        git variable points to real GIT command you need to run at your computer.
+        svn variable points to real SVN command you need to run at your computer.
     -->
     <var name="git" default="git"/>
     <var name="svn" default="svn"/>
