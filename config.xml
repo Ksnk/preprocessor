@@ -27,6 +27,7 @@
     <files dstdir="$dst" >
         <copy >git.hat.xml</copy>
         <copy >rebuild.readme.xml</copy>
+        <copy >build.bat</copy>
     </files>
 
     <files dstdir="$dst/phing" dir="src">

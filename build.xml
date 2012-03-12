@@ -8,7 +8,7 @@
         <property name="dst" value="build"/>
         <property name="config" value="config.xml"/>
         <exec
-            command="${php_exe} -q ../preprocessor/build/preprocessor.php /Dtarget=${target} /Ddst=${dst} ${config}"
+            command="${PHPBIN} -q ../preprocessor/build/preprocessor.php /Dtarget=${target} /Ddst=${dst} ${config}"
             checkreturn="true"
             logoutput="true"/>
 	</target>
@@ -19,7 +19,7 @@
         <property name="dst" value="build"/>
         <property name="config" value="config.xml"/>
         <exec
-            command="${php_exe} -q src/preprocessor.php  /Dtarget=${target} /Ddst=${dst} ${config}"
+            command="${PHPBIN} -q src/preprocessor.php  /Dtarget=${target} /Ddst=${dst} ${config}"
             checkreturn="true"
             logoutput="true"/>
 
