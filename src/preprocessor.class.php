@@ -348,7 +348,6 @@ class preprocessor
                 $this->xml_string($file);
             }
         } else {
-            $this->opt($files->attributes());
             $dst = $this->opt('dstdir');
             $attributes = array();
             foreach ($files->attributes() as $k => $v) {
@@ -417,7 +416,7 @@ class preprocessor
                         $files->getName()
                         , $attributes);
                 }
-         }
+            }
         }
         $this->opt();
     }
