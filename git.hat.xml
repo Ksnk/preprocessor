@@ -12,7 +12,6 @@
 
     <files>
         <echo><![CDATA[<%
-
         $separator= str_repeat('-',90);
         if(is_dir('.svn')){
         // so it's svn project
@@ -24,6 +23,7 @@
             $svn_revision=$m[1];
             preg_match('/Date:\s([\d- :\+]+)$/im',$output,$m);
             $svn_modified=trim($m[1]);
+            $buildtime=date('ymdHi');
             POINT::inline('hat',
 $separator.'
 $Id: '.$version.'

@@ -142,8 +142,12 @@ class preprocessor
     {
         if (empty($par)) $par = array();
         $dst = preg_replace('#(\\/)\.\1#', '\1', $dst);
-        //  $this->log(1,print_r(array($src,$dst,$act,$par),true));
-
+        /*<% if ($target=='phing') {%>*/
+        if(preg_match('/^(?:[\x01-\x7F]|[\xC0-\xFF][\x80-\xBF])+$/', $src)) {
+        } else if(preg_match('/[\x80-\xFF]/', $src)) {
+            $par['log_code']='cp1251';
+        }
+        /*<%} else echo $target%>*/
         $this->store[] = array($src, $dst, $act, $par);
     }
 
@@ -330,6 +334,94 @@ class preprocessor
         return array_unique($files);
     }
 
+    /**
+     * @param SimpleXMLElement $files
+     */
+    private function xml_string($files){
+        $this->opt($files->attributes());
+
+        $name = 'handle_' . strtolower($files->getName());
+        if (method_exists($this, $name)) {
+            call_user_func_array(array($this, $name), array(&$files));
+        } elseif ($files->getName() == 'files') {
+            foreach ($files->children() as $file) {
+                $this->xml_string($file);
+            }
+        } else {
+            $this->opt($files->attributes());
+            $dst = $this->opt('dstdir');
+            $attributes = array();
+            foreach ($files->attributes() as $k => $v) {
+                $attributes[$k] = (string)$v;
+            }
+            $attributes['code'] = $this->opt('code');
+            $attributes['force'] = $this->opt('force');
+            $depend = $this->opt('depend');
+            if (!empty($depend)) {
+                $depends = explode(';', $depend);
+                $xtime = 0;
+                foreach ($depends as $d) {
+                    $x = strtotime($d);
+                    if ($x && $x > 0) {
+                        $xtime = max($x, $xtime);
+                    } else {
+                        foreach ($this->findByMask($d) as $a) {
+                            $xtime = max($xtime, filemtime($a));
+                        }
+                    }
+                }
+                $attributes['xtime'] = $xtime;
+            }
+
+            $str_file = $this->evd((string)$files);
+            if (!empty($dst) && !preg_match('#[^\w\.\\/]#', $str_file) && dirname($str_file) != '') {
+                $dst .= '/' . dirname($str_file);
+            }
+            if ($files->getName() == 'echo') {
+                list($dst, $name) = $this->opt('dstdir', 'name');
+                if (!empty($dst)) {
+                    if (empty($name) && preg_match('#[\w\.\\\/#', $files)) {
+                        $name = basename($files);
+                    }
+                    $dst .= '/' . $name;
+                }
+                $this->newpair(
+                    (string)$files,
+                    $dst,
+                    $files->getName()
+                    , $attributes);
+            } else {
+                $dir = $this->opt('dir');
+                if (!empty($dir)) {
+                    $dir = rtrim($dir, '\\/') . '/';
+                }
+                if (strpos($dir, '*') !== FALSE) {
+                    $this->log(1, sprintf("`dir` parameter can't contain `*` (%s) \n", $dir));
+                }
+                // $this->log(2,$dir.(string)$file);
+                $pdir = '';
+                foreach ($this->findByMask($dir . $str_file) as $a) {
+                    list($dst, $name) = $this->opt('dstdir', 'name');
+                    $pdir = dirname(substr($a, strlen($dir)));
+                    if (!empty($pdir)) $pdir .= '/';
+
+                    if (!empty($dst)) {
+                        if (empty($name)) {
+                            $name = basename($a);
+                        }
+                        $dst .= '/' . $pdir . $name;
+                    }
+                    $this->newpair(
+                        realpath($a),
+                        $dst,
+                        $files->getName()
+                        , $attributes);
+                }
+         }
+        }
+        $this->opt();
+    }
+
 
     /**
      * read xml file and parse information.
@@ -354,88 +446,7 @@ class preprocessor
         }
         $this->opt($config->attributes());
         foreach ($config->children() as $files) {
-            $this->opt($files->attributes());
-            $name = 'handle_' . strtolower($files->getName());
-            if (method_exists($this, $name)) {
-                call_user_func_array(array($this, $name), array(&$files));
-            } else
-                if ($files->getName() == 'files') {
-                    foreach ($files->children() as $file) {
-                        $this->opt($file->attributes());
-                        $dst = $this->opt('dstdir');
-                        $attributes = array();
-                        foreach ($file->attributes() as $k => $v) {
-                            $attributes[$k] = (string)$v;
-                        }
-                        $attributes['code'] = $this->opt('code');
-                        $attributes['force'] = $this->opt('force');
-                        $depend = $this->opt('depend');
-                        if (!empty($depend)) {
-                            $depends = explode(';', $depend);
-                            $xtime = 0;
-                            foreach ($depends as $d) {
-                                $x = strtotime($d);
-                                if ($x && $x > 0) {
-                                    $xtime = max($x, $xtime);
-                                } else {
-                                    foreach ($this->findByMask($d) as $a) {
-                                        $xtime = max($xtime, filemtime($a));
-                                    }
-                                }
-                            }
-                            $attributes['xtime'] = $xtime;
-                        }
-
-                        $str_file = $this->evd((string)$file);
-                        if (!empty($dst) && !preg_match('#[^\w\.\\/]#', $str_file) && dirname($str_file) != '') {
-                            $dst .= '/' . dirname($str_file);
-                        }
-                        if ($file->getName() == 'echo') {
-                            list($dst, $name) = $this->opt('dstdir', 'name');
-                            if (!empty($dst)) {
-                                if (empty($name) && preg_match('#[\w\.\\\/#', $file)) {
-                                    $name = basename($file);
-                                }
-                                $dst .= '/' . $name;
-                            }
-                            $this->newpair(
-                                (string)$file,
-                                $dst,
-                                $file->getName()
-                                , $attributes);
-                        } else {
-                            $dir = $this->opt('dir');
-                            if (!empty($dir)) {
-                                $dir = rtrim($dir, '\\/') . '/';
-                            }
-                            if (strpos($dir, '*') !== FALSE) {
-                                $this->log(1, sprintf("`dir` parameter can't contain `*` (%s) \n", $dir));
-                            }
-                            // $this->log(2,$dir.(string)$file);
-                            $pdir = '';
-                            foreach ($this->findByMask($dir . $str_file) as $a) {
-                                list($dst, $name) = $this->opt('dstdir', 'name');
-                                $pdir = dirname(substr($a, strlen($dir)));
-                                if (!empty($pdir)) $pdir .= '/';
-
-                                if (!empty($dst)) {
-                                    if (empty($name)) {
-                                        $name = basename($a);
-                                    }
-                                    $dst .= '/' . $pdir . $name;
-                                }
-                                $this->newpair(
-                                    realpath($a),
-                                    $dst,
-                                    $file->getName()
-                                    , $attributes);
-                            }
-                        }
-
-                        $this->opt();
-                    }
-                }
-            $this->opt();
+            $this->xml_string($files);
         }
         $this->opt();
         if ($insertbefore) {
@@ -516,9 +527,9 @@ class preprocessor
             if (!is_file($dst) || (filemtime($dst) < max($time, $this->cfg_time()))) {
                 $this->decode($s, $code);
                 // удаляем пустые комментарии - последствия корявой обработки вставки секций
-                file_put_contents($dst, preg_replace(array('~^\s*/\*\*/\s*$~m', '~\s*/\*\s*\*/~'), array('', ''),
-                    str_replace("\xEF\xBB\xBF", '', trim($s))
-                ));
+                $s= str_replace("\xEF\xBB\xBF", '', trim($s));
+                $s= preg_replace(array('~^\s*/\*\s*\*/\s*$~m','~\s*/\*\s*\*/~'), array('', ''),$s);
+                file_put_contents($dst, $s) ;
                 $this->betouch($dst, max($time, $this->cfg_time()));
                 return true;
             }
@@ -603,6 +614,10 @@ class preprocessor
                             $this->cfg_time($filemtime);
                         }
                         if ($this->post_process($dstfile, $filemtime, $___m[3]['code'])) {
+                            if(!empty($___m[3]['log_code'])){
+                                $srcfile= iconv($___m[3]['log_code'],'UTF-8',$srcfile);
+                                $dstfile= iconv($___m[3]['log_code'],'UTF-8',$dstfile);
+                            }
                             $this->log(2, "e>$srcfile");
                             if (strlen($srcfile) + strlen($dstfile) > 75) {
                                 $this->log(2, "\n\r  ");
@@ -628,7 +643,7 @@ class preprocessor
                         $mtime = 0;
                     $this->debug(array($mtime, filemtime($srcfile)));
                     if (!is_file($dstfile) || (filemtime($dstfile) < filemtime($srcfile))) {
-                        $this->log(2, "c>$srcfile");
+
                         if (!empty($___m[3]['code'])) {
                             $s = file_get_contents($srcfile);
                             $this->decode($s, $___m[3]['code']);
@@ -636,6 +651,12 @@ class preprocessor
                         } else
                             copy($srcfile, $dstfile);
                         $this->betouch($dstfile, filemtime($srcfile));
+
+                        if(!empty($___m[3]['log_code'])){
+                            $srcfile= iconv($___m[3]['log_code'],'UTF-8',$srcfile);
+                            $dstfile= iconv($___m[3]['log_code'],'UTF-8',$dstfile);
+                        }
+                        $this->log(2, "c>$srcfile");
                         if (strlen($srcfile) + strlen($dstfile) > 75) {
                             $this->log(2, "\n\r  ");
                         }

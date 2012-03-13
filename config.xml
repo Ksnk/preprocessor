@@ -30,6 +30,8 @@
         <copy >build.bat</copy>
     </files>
 
+    <echo><![CDATA[<% $target="phing";%>]]></echo>
+
     <files dstdir="$dst/phing" dir="src">
         <file >point.ext.php</file>
         <file >preprocessor.class.php</file>

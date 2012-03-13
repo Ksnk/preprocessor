@@ -131,10 +131,11 @@ class POINT
         $s = '';
         if (isset(self::$points[$point_name]))
             $s = join(self::$points[$point_name], "\r\n");
+
         foreach (explode('|', $filters) as $filter) {
             if ($filter == '' || $filter == 'comment') {
                 $ss = $preprocessor->obget();
-                if (preg_match('~(\s+\*)\s*$|(/\*)\s*$|(//)\s*$|(\#\#\s*)$~', $ss, $m)) {
+                if (preg_match('~(\s+\*)\s*$|(/\*+)\s*$|(//)\s*$|(\#\#\s*)$~s', $ss, $m)) {
                     if (!empty($m[1])) {
                         // javascript comment
                         $filter = $filter == 'comment' ? 'jscomment' : 'php_comment';
@@ -148,6 +149,7 @@ class POINT
                         $filter = $filter == 'comment' ? 'tplcomment' : 'line_comment';
                     }
                 }
+                preprocessor::log(4,'point: '.$point_name.' filter :"'.$filter.'"'."\n") ;
             }
             switch ($filter) {
                 case 'wiki-txt':
@@ -221,8 +223,8 @@ class POINT
                 case 'php_comment':
                     // выводим php код в окружении закрывающего - открывающего комментария
                     $s = '*/
-    			' . $s . '
-    			/*';
+' . $s . '
+/*';
                     break;
                 case 'html2js':
                     // выводим html для вставки в изображение строки с двойными кавычками.
