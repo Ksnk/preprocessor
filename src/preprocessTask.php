@@ -105,7 +105,6 @@ class PreprocessTask extends Task
     public function init()
     {
         $this->preprocessor = preprocessor::instance();
-        POINT::clear();
     }
 
     public function main()
@@ -144,6 +143,7 @@ class PreprocessTask extends Task
         //run it!
         if (!!$this->config) {
             $this->log('making "' . $this->config . '"', Project::MSG_WARN);
+            POINT::clear();
             $this->preprocessor->xml_read($this->config);
             $this->preprocessor->process();
         }

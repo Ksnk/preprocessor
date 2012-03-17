@@ -236,8 +236,8 @@ class POINT
                     $s = preg_replace_callback('#(<script[^>]*>)(.*?)(</script[^>]*>)#is', array('POINT', '_replace'), $s);
                     for (; $start < self::$curplaceloder; $start++) {
                         self::$placeholder[$start] =
-                            preg_replace(array('#//.*$#m', '#/\*.*?\*/#s', "/\n/", '/\s+/', '#\s*(\\\\n\s*)+#')
-                                , array("", "", '\n', ' ', '\n'),
+                            preg_replace(array('#//.*$#m', '#/\*.*?\*/#s', "/\n/",'/"/', '/\s+/', '#\s*(\\\\n\s*)+#')
+                                , array("", "", '\n','\\"', ' ', '\n'),
                                 self::$placeholder[$start]
                             );
                     }

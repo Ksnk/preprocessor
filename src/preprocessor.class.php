@@ -431,7 +431,9 @@ class preprocessor
     {
         $this->debug('xml_read:', getcwd());
         $oldcwd = getcwd();
-        if (is_file($xml)) {
+        $this->log(4,$oldcwd.' '.realpath($xml)."\n") ;
+        if (is_file(realpath($xml))) {
+            $xml=realpath($xml);
             chdir(dirname($xml));
             $this->debug('file:', $xml);
             $this->cfg_time($xml);
