@@ -21,14 +21,35 @@ class preprocessor
         $logLevel = 2,
         $logs = array('');
 
+    /**
+     * here we can store the file list, Ну да!
+     */
+    private $store = array();
+
+    /**
+     *  here we can store a current start of files we can remove from list by using remove tag
+     */
+    private $store_stack=array(0);
+
+    /**
+     * just an options to hold point attributes awhile parsing an xml tree
+     * @var array
+     */
+    protected $options = array();
+
+    /**
+     * array with variables exported from outer space
+     * (xml, command line and so on);
+     */
+    public $exported_var = array();
+
+
     static function instance()
     {
         if (!isset($GLOBALS['preprocessor']))
             $GLOBALS['preprocessor'] = new preprocessor();
         return $GLOBALS['preprocessor'];
     }
-
-    protected $options = array();
 
     /**
      * установка-получение параметров с сохранением предыдущего и откатом
@@ -106,12 +127,6 @@ class preprocessor
     }
 
     /**
-     * array with variables exported from outer space
-     * (xml, command line and so on);
-     */
-    public $exported_var = array();
-
-    /**
      * to hold the modification time of all evaluated files we need
      * to store the last time source files was modified.
      */
@@ -126,11 +141,6 @@ class preprocessor
         }
         return $cfg_time;
     }
-
-    /**
-     * here we can store our files list, Ну да!
-     */
-    private $store = array();
 
     /**
      * store setter  SRC - DST - ACTION
@@ -224,17 +234,19 @@ class preprocessor
      */
     function handle_var(&$files)
     {
-        if ((string)$files['name'] == '')
+        $name= (string)$files['name'];
+        $value= (string)$files['value'];
+        if (empty($value)) $value=(string)$files;
+        if (empty($name))
             $this->log(0, 'XML: there is no NAME parameter of VAR tag.'); // faked variable
-        if ((string)$files == "") { // just assign a value if no values was a while
+        if (empty($value)) { // just assign a value if no values was a while
             if (isset($this->exported_var[(string)$files['name']]))
                 return;
         }
-        $val = (string)$files;
-        if (empty($val))
-            $val = (string)$files['default'];
-        if (!empty($val))
-            $this->export((string)$files['name'], $val);
+        if (empty($value))
+            $value = (string)$files['default'];
+        if (!empty($value))
+            $this->export((string)$files['name'], $value);
     }
 
     /**
@@ -247,6 +259,36 @@ class preprocessor
         if ((string)$files['name'] == '')
             $this->log(0, 'XML: there is no NAME parameter of IMPORT tag.'); // faked variable
         $this->xml_read((string)$files['name']);
+    }
+
+    function handle_remove(&$files)
+    {
+        $start=$this->store_stack[0];// so we trust it always be ;)
+        $mask= (string)$files['name'];
+        if (empty($mask)) $mask=(string)$files;
+        if (empty($mask))
+            $this->log(0, 'XML: there is no NAME or inner value of REMOVE tag.'); // faked variable
+        /* so create mask */
+        $mask='#'.preg_replace(
+            array('/\./','/\*\*+/'  ,'/\*/' ,'/@@0@@/'  ,'/@@1@@/'          ,'/\?/')
+            ,array('\.' ,'@@0@@'    ,'@@1@@','.*'       ,'[^:/\\\\\\\\]*'   ,'[^:/\\\\\\\\]'),$mask).'$#';
+        //$this->log(2, 'remove: from: '.$start.' to:'.count($this->store).' mask built: '.$mask);
+        for($i=count($this->store)-1;$i>=$start;$i--){
+            $src= $this->store[$i][0];
+            //$this->log(2, 'remove:'.$src);
+            if(preg_match($mask,$src)){
+                 array_splice($this->store,$i,1);
+            }
+        }
+    }
+
+    /**
+     * `remove` sinonym, sorry not reflect this in documentation. ;)
+     * @param $files
+     */
+    function handle_exclude(&$files)
+    {
+        return $this->handle_remove($files);
     }
 
     private function obend()
@@ -344,9 +386,11 @@ class preprocessor
         if (method_exists($this, $name)) {
             call_user_func_array(array($this, $name), array(&$files));
         } elseif ($files->getName() == 'files') {
+            array_unshift($this->store_stack,count($this->store));
             foreach ($files->children() as $file) {
                 $this->xml_string($file);
             }
+            array_shift($this->store_stack)  ;
         } else {
             $dst = $this->opt('dstdir');
             $attributes = array();
