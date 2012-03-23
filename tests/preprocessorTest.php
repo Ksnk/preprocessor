@@ -13,6 +13,10 @@ function pps(&$x,$default=''){if(empty($x))return $default; else return $x;}
 
 class preprocessorTest extends PHPUnit_Framework_TestCase {
 
+    function nl2nl($s){
+        return trim(str_replace(array("\r\n","\r"),array("\n","\n"),$s))  ;
+    }
+
     /**
      * тестирование шаблона с генерацией нового класса
      */
@@ -86,13 +90,14 @@ it's a text
 
 ##  ----point::xxx----
 it's a text
-    			it's a text
+
+it's a text
 HTML;
         $preprocessor=preprocessor::instance();
         $preprocessor->xml_read($data);
         $preprocessor->process();
         $data=file_get_contents('tests/xx.txt');
-        $this->assertEquals($result,$data);
+        $this->assertEquals($this->nl2nl($result),$this->nl2nl($data));
         POINT::clear();
         unlink('tests/xx.txt') ;
     }

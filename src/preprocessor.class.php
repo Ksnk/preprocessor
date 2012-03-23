@@ -270,8 +270,8 @@ class preprocessor
             $this->log(0, 'XML: there is no NAME or inner value of REMOVE tag.'); // faked variable
         /* so create mask */
         $mask='#'.preg_replace(
-            array('/\./','/\*\*+/'  ,'/\*/' ,'/@@0@@/'  ,'/@@1@@/'          ,'/\?/')
-            ,array('\.' ,'@@0@@'    ,'@@1@@','.*'       ,'[^:/\\\\\\\\]*'   ,'[^:/\\\\\\\\]'),$mask).'$#';
+            array('~[\\\\/]~'   ,'/\./','/\*\*+/'  ,'/\*/' ,'/@@0@@/'  ,'/@@1@@/'       ,'/@@2@@/'          ,'/\?/')
+            ,array('@@2@@'  , '\.' ,'@@0@@'    ,'@@1@@','.*'       ,'[^:/\\\\\\\\]*','[\/\\\\\\\\]'   ,'[^:/\\\\\\\\]'),$mask).'$#';
         //$this->log(2, 'remove: from: '.$start.' to:'.count($this->store).' mask built: '.$mask);
         for($i=count($this->store)-1;$i>=$start;$i--){
             $src= $this->store[$i][0];

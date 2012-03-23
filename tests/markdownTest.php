@@ -31,7 +31,7 @@ HTML;
         $this->assertEquals(str_replace("\r\n","\n",$result),POINT::get('test1','markdown-html'));
     }
 
-    function testMarkdown2 (){
+/*    function testMarkdown2 (){
         $data=<<<MARKDOWN
 # Hello
 
@@ -41,7 +41,7 @@ MARKDOWN;
         POINT::clear();
         POINT::inline('test1',$data);
         $this->assertEquals(POINT::get('test1','markdown-txt'),POINT::get('test1','mark-txt'));
-    }
+    }  */
 }
 
 if (!defined('PHPUnit_MAIN_METHOD')) {
