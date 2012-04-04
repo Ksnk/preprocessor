@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config >
     <!--
-      файл предназначен для регенерации оглавления в readme.markdown
+      файл предназначен для регенерации оглавления в readme.md
     -->
     <files>
     <echo> <![CDATA[<%
