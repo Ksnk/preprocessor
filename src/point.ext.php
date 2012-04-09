@@ -57,7 +57,7 @@ class POINT
         self::$eval_idx++;
         //  $GLOBALS['preprocessor']->log(2,'try to hold "'.$name.'" file "'.substr(self::$eval_src,0,80).'" '.self::$eval_idx."\n");
 
-        if (isset(self::$point_stat[self::$eval_src . '_' . self::$eval_idx])) {
+        if (!empty(self::$eval_src) && isset(self::$point_stat[self::$eval_src . '_' . self::$eval_idx])) {
             preprocessor::log(2, 'second try to hold "' . $name . '" file "' . substr(self::$eval_src, 0, 80) . '" '
                 . self::$eval_idx . "\n" . print_r(self::$points, true));
             return;
@@ -231,6 +231,9 @@ class POINT
                     // $scripts
                     // коррекция NL
                     $s = str_replace(array("\r\n", "\r"), array("\n", "\n"), $s);
+                    // чистим шаблонные вставки
+                    $start = self::$curplaceloder;
+                    $s = preg_replace_callback('~({{.*?}}|{%.*?%}|{#.*?#})~is', array('POINT', '_replace'), $s);
                     // чистим скрипты
                     $start = self::$curplaceloder;
                     $s = preg_replace_callback('#(<script[^>]*>)(.*?)(</script[^>]*>)#is', array('POINT', '_replace'), $s);

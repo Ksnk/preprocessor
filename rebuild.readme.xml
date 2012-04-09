@@ -5,8 +5,8 @@
     -->
     <files>
     <echo> <![CDATA[<%
-        // заполняем оглавление в readme.markdown
-        if(empty($readme_file)) $readme_file="readme.markdown"  ;
+        // заполняем оглавление в readme.md
+        if(empty($readme_file)) if(file_exists('readme.md))$readme_file="readme.md" else )$readme_file="readme.markdown" ;
         $readme=file_get_contents($readme_file);
         // для всех элементов оглавления - ## ### выставляем пункты
         $p="\n\n";

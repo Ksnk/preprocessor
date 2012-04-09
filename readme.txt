@@ -57,5 +57,5 @@ thanks contacto at lucasfonzalida.com.ar and php.net ;)
 ##0.8 (beta)##
 
   первый публичный релиз
-<% POINT::finish(); POINT::file('readme','readme.markdown');
+<% POINT::finish(); POINT::file('readme','readme.md');
 echo POINT::get('readme','markdown-txt'); %>
