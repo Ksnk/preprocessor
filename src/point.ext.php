@@ -106,6 +106,12 @@ class POINT
         return $m[1] . '@' . self::$curplaceloder++ . '@' . $m[3];
     }
 
+    static function _replace1($m)
+    {
+        self::$placeholder[self::$curplaceloder] = $m[0];
+        return '@' . self::$curplaceloder++ . '@';
+    }
+
     /**
      * @XXX@ заменяем на placeholder
      * @static
@@ -149,7 +155,7 @@ class POINT
                         $filter = $filter == 'comment' ? 'tplcomment' : 'line_comment';
                     }
                 }
-                preprocessor::log(4,'point: '.$point_name.' filter :"'.$filter.'"'."\n") ;
+                preprocessor::log(4, 'point: ' . $point_name . ' filter :"' . $filter . '"' . "\n");
             }
             switch ($filter) {
                 case 'wiki-txt':
@@ -232,27 +238,26 @@ class POINT
                     // коррекция NL
                     $s = str_replace(array("\r\n", "\r"), array("\n", "\n"), $s);
                     // чистим шаблонные вставки
-                    $start = self::$curplaceloder;
-                    $s = preg_replace_callback('~({{.*?}}|{%.*?%}|{#.*?#})~is', array('POINT', '_replace'), $s);
                     // чистим скрипты
                     $start = self::$curplaceloder;
                     $s = preg_replace_callback('#(<script[^>]*>)(.*?)(</script[^>]*>)#is', array('POINT', '_replace'), $s);
                     for (; $start < self::$curplaceloder; $start++) {
-                        self::$placeholder[$start] =
-                            preg_replace(array('#//.*$#m', '#/\*.*?\*/#s', "/\n/",'/"/', '/\s+/', '#\s*(\\\\n\s*)+#')
-                                , array("", "", '\n','\\"', ' ', '\n'),
+                        self::$placeholder[$start] = preg_replace_callback('#@(\d+)@#'
+                            , array('POINT', '_return'),
+                            preg_replace(array('#//.*$#m', '#/\*.*?\*/#s', "/\n/", '/"/', '/\s+/', '#\s*(\\\\n\s*)+#')
+                                , array("", "", '\n', '\\"', ' ', '\n'),
                                 self::$placeholder[$start]
-                            );
+                            ));
                     }
                     //стили
                     $start = self::$curplaceloder;
                     $s = preg_replace_callback('#(<style[^>]*>)(.*?)(</style[^>]*>)#is', array('POINT', '_replace'), $s);
                     for (; $start < self::$curplaceloder; $start++) {
-                        self::$placeholder[$start] =
-                            preg_replace('#\s+#', " ",
+                        self::$placeholder[$start] = preg_replace_callback('#@(\d+)@#'
+                            , array('POINT', '_return'), preg_replace('#\s+#', " ",
                                 preg_replace('#/\*.*?\*/#s', "",
                                     self::$placeholder[$start])
-                            );
+                            ));
                     }
                     // условные комментарии
                     $s = preg_replace_callback('#(<!--\[)(.*?)(\]-->)#is', array('POINT', '_replace'), $s);
@@ -261,6 +266,47 @@ class POINT
                         array('/<!--.*?-->/s', '/"/', '/\\\\/', '/\s+/'
                         , '#\s*(<|</)(body|div|br|script|style|option|dd|dt|dl|iframe)([^<]*>)\s*#is'),
                         array('', '\"', '\\\\', ' ', '\1\2\3'),
+                        $s);
+                    $s = preg_replace_callback('#@(\d+)@#', array('POINT', '_return'), $s);
+                    break;
+                case 'tplcompress':
+                    // выводим html для вставки в изображение строки с двойными кавычками.
+                    // $scripts
+                    // коррекция NL
+                    $s = str_replace(array("\r\n", "\r"), array("\n", "\n"), $s);
+                    // чистим шаблонные вставки
+                    // $start = self::$curplaceloder;
+                    $s = preg_replace_callback('~^##.*?\n~im', array('POINT', '_replace1'), $s);
+                    $s = preg_replace_callback('~{{.*?}}|{%.*?%}|{#.*?#}~is', array('POINT', '_replace1'), $s);
+                    // echo $s;
+                    // чистим скрипты
+                    $start = self::$curplaceloder;
+                    $s = preg_replace_callback('#(<script[^>]*>)(.*?)(</script[^>]*>)#is', array('POINT', '_replace'), $s);
+                    for (; $start < self::$curplaceloder; $start++) {
+                        self::$placeholder[$start] = preg_replace_callback('#@(\d+)@#'
+                            , array('POINT', '_return'),
+                            preg_replace(array('#//.*?$#m', '#\n#', '#/\*.*?\*/#s', '/\s+/', '/@0@/', '#\s*(\n\s*)+#')
+                                , array("", "@0@", "", ' ', "\n", "\n"),
+                                self::$placeholder[$start]
+                            ));
+                    }
+                    //стили
+                    $start = self::$curplaceloder;
+                    $s = preg_replace_callback('#(<style[^>]*>)(.*?)(</style[^>]*>)#is', array('POINT', '_replace'), $s);
+                    for (; $start < self::$curplaceloder; $start++) {
+                        self::$placeholder[$start] = preg_replace_callback('#@(\d+)@#'
+                            , array('POINT', '_return'), preg_replace('#\s+#', " ",
+                                preg_replace('#/\*.*?\*/#s', "",
+                                    self::$placeholder[$start])
+                            ));
+                    }
+                    // условные комментарии
+                    $s = preg_replace_callback('#(<!--\[)(.*?)(\]-->)#is', array('POINT', '_replace'), $s);
+                    // пробелы
+                    $s = preg_replace(
+                        array('/<!--.*?-->/s', '/\s+/'
+                        , '#\s*(<|</)(body|div|br|script|style|option|dd|dt|dl|iframe)([^<]*>)\s*#is'),
+                        array('', ' ', '\1\2\3'),
                         $s);
                     $s = preg_replace_callback('#@(\d+)@#', array('POINT', '_return'), $s);
                     break;
