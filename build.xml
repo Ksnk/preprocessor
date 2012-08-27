@@ -27,7 +27,7 @@
     </target>
 
     <target name="phing" depends="init">
-        <copy todir="z:/usr/local/php5/pear/phing/classes/phing/tasks/ext/preprocessor" overwrite="yes">
+        <copy todir="z:/usr/local/php5/pear/pear/phing/tasks/ext/preprocessor" overwrite="yes">
             <fileset dir="build/phing">
                 <include name="*.*" />
                 <include name="**/*.*" />

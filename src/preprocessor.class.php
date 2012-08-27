@@ -10,6 +10,9 @@
 
 %>
  */
+
+define('SYSTEM','cp1251');
+
 $stderr = fopen('php://stderr', 'w');
 
 class preprocessor
@@ -27,14 +30,20 @@ class preprocessor
     static function ic ($code,$src) {
         if(preg_match('/^(?:[\x01-\x7F]|[\xC0-\xFF][\x80-\xBF])+$/', $src)) {
             // is it UTF-8?
-            if($code=='UTF-8')
+            if($code=='UTF-8' || !preg_match('/[\x80-\xFF]/', $src))
                 return $src   ;
-            else
-                return iconv('UTF-8//IGNORE',$code,$src);
+            else {
+                self::log(2,'encode utf8 '.$src);
+                return iconv('UTF-8',$code.'//IGNORE',$src);
+            }
         } else if(preg_match('/[\x80-\xFF]/', $src)) {
-            return iconv('cp1251//IGNORE',$code,$src);
+            // is it 1251?
+            if($code=='cp1251')
+                return $src;
+            else
+                return iconv('cp1251',$code.'//IGNORE',$src);
         }
-        return $code;
+        return $src;
     }
 
     /**
@@ -388,7 +397,7 @@ class preprocessor
         }
         $files = array();
         foreach ($arr as $m)
-            $files = array_merge($files, glob($m));
+            $files = array_merge($files, glob(self::ic(SYSTEM,$m)));
         return array_unique($files);
     }
 
@@ -446,7 +455,7 @@ class preprocessor
                 }
                 $this->newpair(
                     (string)$files,
-                    $dst,
+                    self::ic(SYSTEM,$dst),
                     $files->getName()
                     , $attributes);
             } else {
@@ -472,7 +481,7 @@ class preprocessor
                     }
                     $this->newpair(
                         realpath($a),
-                        $dst,
+                        self::ic(SYSTEM,$dst),
                         $files->getName()
                         , $attributes);
                 }
