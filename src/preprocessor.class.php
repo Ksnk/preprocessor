@@ -22,6 +22,22 @@ class preprocessor
         $logs = array('');
 
     /**
+     * so convert string from unknown (utf||cp1251) codpage to $code coding
+     */
+    static function ic ($code,$src) {
+        if(preg_match('/^(?:[\x01-\x7F]|[\xC0-\xFF][\x80-\xBF])+$/', $src)) {
+            // is it UTF-8?
+            if($code=='UTF-8')
+                return $src   ;
+            else
+                return iconv('UTF-8//IGNORE',$code,$src);
+        } else if(preg_match('/[\x80-\xFF]/', $src)) {
+            return iconv('cp1251//IGNORE',$code,$src);
+        }
+        return $code;
+    }
+
+    /**
      * here we can store the file list, Ну да!
      */
     private $store = array();

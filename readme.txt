@@ -1,4 +1,4 @@
-﻿<% POINT::start('history');%>
+<% POINT::start('history');%>
 
 #История изменений проекта PREPROCESSOR#
 
@@ -16,7 +16,7 @@
  * Добавлен build.bat.
  * фильтры в POINT можно разделять символом |
 
- * рефакторинг кода. Изменена дисциплина работы с POINT. Теперь это класс POINT с  фунциями start,finish,get вместо point_start,point_finisht,point, соответственно  Добавлены функции
+ * рефакторинг кода. Изменена дисциплина работы с POINT. Теперь это класс POINT с  фунциями start, finish, get вместо point_start, point_finish, point, соответственно.  Добавлены функции
 
  * POINT::inline - вставить текст в точку
  * POINT::file - вставить содержимое файла в точку без обработки.

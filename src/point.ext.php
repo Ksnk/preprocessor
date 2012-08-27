@@ -123,6 +123,37 @@ class POINT
         return self::$placeholder[$m[1]];
     }
 
+    static function filter($s,$filter){
+        switch ($filter){
+            case '2js':
+                return str_replace(
+                    array('\\',"\n",'"'),
+                    array('\\\\','\n','\"'),
+                    $s);
+                break;
+            case 'jscompress':
+                return preg_replace(array('#//.*?$#m', '#\r?\n#', '#/\*.*?\*/#s', '/\s+/', '/@0@/', '#\s*(\n\s*)+#')
+                    , array("", "@0@", "", ' ', "\n", "\n"),
+                    $s
+                );
+                break;
+            case 'csscompress':
+                return preg_replace(
+                    array('/<!--.*?-->/s', '#/\*.*?\*/#s', '#//.*?#',  '/\s+/', '/^\\s+|\\s+$/m','#\s*({|})\s*#'),
+                    array('', '', ' ', ' ', '','\1'),
+                    $s);
+                break;
+            case 'htmlcompress':
+                return preg_replace(
+                    array('/<!--.*?-->/s', '/\s+/'
+                    , '#\s*(<|</)(body|div|br|script|style|option|dd|dt|dl|iframe)([^<]*>)\s*#is'),
+                    array('', ' ', '\1\2\3'),
+                    $s);
+            default:
+                return $s;
+        }
+    }
+
     /**
      * вывод содержимого точки. При выводе применяются фильтры, которые позволяют вставляться
      * в комментарии (пустой фильтр), как часть комментария (фильтр comment), с текстовой обработкой (wiki)
@@ -279,44 +310,34 @@ class POINT
                     $s = preg_replace_callback('~^##.*?\n~im', array('POINT', '_replace1'), $s);
                     $s = preg_replace_callback('~{{.*?}}|{%.*?%}|{#.*?#}~is', array('POINT', '_replace1'), $s);
                     // echo $s;
+                    // условные комментарии
+                    $s = preg_replace_callback('#(<!--\[)(.*?)(\]-->)#is', array('POINT', '_replace'), $s);
                     // чистим скрипты
                     $start = self::$curplaceloder;
                     $s = preg_replace_callback('#(<script[^>]*>)(.*?)(</script[^>]*>)#is', array('POINT', '_replace'), $s);
                     for (; $start < self::$curplaceloder; $start++) {
                         self::$placeholder[$start] = preg_replace_callback('#@(\d+)@#'
-                            , array('POINT', '_return'),
-                            preg_replace(array('#//.*?$#m', '#\n#', '#/\*.*?\*/#s', '/\s+/', '/@0@/', '#\s*(\n\s*)+#')
-                                , array("", "@0@", "", ' ', "\n", "\n"),
-                                self::$placeholder[$start]
-                            ));
+                            , array('POINT', '_return'),self::filter(self::$placeholder[$start],'jscompress')
+                            );
                     }
                     //стили
                     $start = self::$curplaceloder;
                     $s = preg_replace_callback('#(<style[^>]*>)(.*?)(</style[^>]*>)#is', array('POINT', '_replace'), $s);
                     for (; $start < self::$curplaceloder; $start++) {
                         self::$placeholder[$start] = preg_replace_callback('#@(\d+)@#'
-                            , array('POINT', '_return'), preg_replace('#\s+#', " ",
-                                preg_replace('#/\*.*?\*/#s', "",
-                                    self::$placeholder[$start])
-                            ));
+                            , array('POINT', '_return'),self::filter(self::$placeholder[$start],'csscompress')
+                        );
                     }
-                    // условные комментарии
-                    $s = preg_replace_callback('#(<!--\[)(.*?)(\]-->)#is', array('POINT', '_replace'), $s);
                     // пробелы
-                    $s = preg_replace(
-                        array('/<!--.*?-->/s', '/\s+/'
-                        , '#\s*(<|</)(body|div|br|script|style|option|dd|dt|dl|iframe)([^<]*>)\s*#is'),
-                        array('', ' ', '\1\2\3'),
-                        $s);
+                    $s = self::filter($s,'htmlcompress');
                     $s = preg_replace_callback('#@(\d+)@#', array('POINT', '_return'), $s);
                     break;
                 case 'css2js':
                     // выводим css для вставки в изображение строки с двойными кавычками.
-                    $s = preg_replace(
-                        array('/<!--.*?-->/s', '/\/\*.*\*\//s', '/\/\/.*?/', '/"/', '/\\\\/', '/\\s\\s+/', '/^\\s+|\\s+$/m'),
-                        array('', '', ' ', '\"', '\\\\', ' ', ''),
-                        $s);
+                    $s=self::filter(self::filter($s,'csscompress'),'2js');
                     break;
+                default:
+                    $s=self::filter($s,$filter);
             }
         }
         return $s;
