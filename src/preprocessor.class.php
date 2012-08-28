@@ -11,8 +11,6 @@
 %>
  */
 
-define('SYSTEM','cp1251');
-
 $stderr = fopen('php://stderr', 'w');
 
 class preprocessor
@@ -25,28 +23,6 @@ class preprocessor
         $logs = array('');
 
     /**
-     * so convert string from unknown (utf||cp1251) codpage to $code coding
-     */
-    static function ic ($code,$src) {
-        if(preg_match('/^(?:[\x01-\x7F]|[\xC0-\xFF][\x80-\xBF])+$/', $src)) {
-            // is it UTF-8?
-            if($code=='UTF-8' || !preg_match('/[\x80-\xFF]/', $src))
-                return $src   ;
-            else {
-                self::log(2,'encode utf8 '.$src);
-                return iconv('UTF-8',$code.'//IGNORE',$src);
-            }
-        } else if(preg_match('/[\x80-\xFF]/', $src)) {
-            // is it 1251?
-            if($code=='cp1251')
-                return $src;
-            else
-                return iconv('cp1251',$code.'//IGNORE',$src);
-        }
-        return $src;
-    }
-
-    /**
      * here we can store the file list, Ну да!
      */
     private $store = array();
@@ -54,7 +30,7 @@ class preprocessor
     /**
      *  here we can store a current start of files we can remove from list by using remove tag
      */
-    private $store_stack=array(0);
+    private $store_stack = array(0);
 
     /**
      * just an options to hold point attributes awhile parsing an xml tree
@@ -69,6 +45,67 @@ class preprocessor
     public $exported_var = array();
 
 
+    /**
+     * to get a system codepages from system registry (Windows)
+     * @return array  (system code page, console code page)
+     */
+    private static function get_system_codepages()
+    {
+        ob_start();
+        system("reg query HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage");
+        $res = ob_get_contents();
+        ob_end_clean();
+        if (!preg_match_all('/(ACP|OEMCP)\s+REG_SZ\s+(\d+)(\S*)/', $res, $m))
+            return array('UTF-8', 'UTF-8');
+        for ($i = 0; $i < 2; $i++)
+            if (empty($m[2][$i]))
+                $m[2][$i] = $m[3][$i];
+            else
+                $m[2][$i] = 'cp' . $m[2][$i];
+        if ($m[1][0] == 'ACP')
+            return array($m[2][0], $m[2][1]);
+        else
+            return array($m[2][1], $m[2][0]);
+    }
+
+    /**
+     * so convert string from unknown to (utf|system|console) codpage
+     * by using autodetect ability
+     */
+    static function ic($code, $src)
+    {
+        static $codepages, $sample;
+        if (empty($codepages)) {
+            $codepages = self::get_system_codepages();
+            $sample = array('utf' => 'UTF-8',
+                'sys' => $codepages[0],
+                'con' => $codepages[1]);
+        }
+        if (isset($sample[$code]))
+            $code = $sample[$code];
+
+        if (preg_match('/^(?:[\x01-\x7F]|[\xC0-\xFF][\x80-\xBF])+$/', $src)) {
+            // is it UTF-8?
+            if ($code == 'UTF-8' || !preg_match('/[\x80-\xFF]/', $src))
+                return $src;
+            else {
+                return iconv('UTF-8', $code . '//IGNORE', $src);
+            }
+        } else if (preg_match('/[\x80-\xFF]/', $src)) {
+            // is it 1251?
+            if ($code == $codepages[0])
+                return $src;
+            else
+                return iconv($codepages[0], $code . '//IGNORE', $src);
+        }
+        return $src;
+    }
+
+    /**
+     * some sort of singlethone
+     * @static
+     * @return mixed
+     */
     static function instance()
     {
         if (!isset($GLOBALS['preprocessor']))
@@ -177,12 +214,6 @@ class preprocessor
     {
         if (empty($par)) $par = array();
         $dst = preg_replace('#(\\/)\.\1#', '\1', $dst);
-        /*<% if ($target=='phing') {%>*/
-        if(preg_match('/^(?:[\x01-\x7F]|[\xC0-\xFF][\x80-\xBF])+$/', $src)) {
-        } else if(preg_match('/[\x80-\xFF]/', $src)) {
-            $par['log_code']='cp1251';
-        }
-        /*<%} else echo $target%>*/
         $this->store[] = array($src, $dst, $act, $par);
     }
 
@@ -259,9 +290,9 @@ class preprocessor
      */
     function handle_var(&$files)
     {
-        $name= (string)$files['name'];
-        $value= (string)$files['value'];
-        if (empty($value)) $value=(string)$files;
+        $name = (string)$files['name'];
+        $value = (string)$files['value'];
+        if (empty($value)) $value = (string)$files;
         if (empty($name))
             $this->log(0, 'XML: there is no NAME parameter of VAR tag.'); // faked variable
         if (empty($value)) { // just assign a value if no values was a while
@@ -288,21 +319,21 @@ class preprocessor
 
     function handle_remove(&$files)
     {
-        $start=$this->store_stack[0];// so we trust it always be ;)
-        $mask= (string)$files['name'];
-        if (empty($mask)) $mask=(string)$files;
+        $start = $this->store_stack[0]; // so we trust it always be ;)
+        $mask = (string)$files['name'];
+        if (empty($mask)) $mask = (string)$files;
         if (empty($mask))
             $this->log(0, 'XML: there is no NAME or inner value of REMOVE tag.'); // faked variable
         /* so create mask */
-        $mask='#'.preg_replace(
-            array('~[\\\\/]~'   ,'/\./','/\*\*+/'  ,'/\*/' ,'/@@0@@/'  ,'/@@1@@/'       ,'/@@2@@/'          ,'/\?/')
-            ,array('@@2@@'  , '\.' ,'@@0@@'    ,'@@1@@','.*'       ,'[^:/\\\\\\\\]*','[\/\\\\\\\\]'   ,'[^:/\\\\\\\\]'),$mask).'$#';
+        $mask = '#' . preg_replace(
+            array('~[\\\\/]~', '/\./', '/\*\*+/', '/\*/', '/@@0@@/', '/@@1@@/', '/@@2@@/', '/\?/')
+            , array('@@2@@', '\.', '@@0@@', '@@1@@', '.*', '[^:/\\\\\\\\]*', '[\/\\\\\\\\]', '[^:/\\\\\\\\]'), $mask) . '$#';
         //$this->log(2, 'remove: from: '.$start.' to:'.count($this->store).' mask built: '.$mask);
-        for($i=count($this->store)-1;$i>=$start;$i--){
-            $src= $this->store[$i][0];
+        for ($i = count($this->store) - 1; $i >= $start; $i--) {
+            $src = $this->store[$i][0];
             //$this->log(2, 'remove:'.$src);
-            if(preg_match($mask,$src)){
-                 array_splice($this->store,$i,1);
+            if (preg_match($mask, $src)) {
+                array_splice($this->store, $i, 1);
             }
         }
     }
@@ -397,25 +428,26 @@ class preprocessor
         }
         $files = array();
         foreach ($arr as $m)
-            $files = array_merge($files, glob(self::ic(SYSTEM,$m)));
+            $files = array_merge($files, glob(self::ic('sys', $m)));
         return array_unique($files);
     }
 
     /**
      * @param SimpleXMLElement $files
      */
-    private function xml_string($files){
+    private function xml_string($files)
+    {
         $this->opt($files->attributes());
 
         $name = 'handle_' . strtolower($files->getName());
         if (method_exists($this, $name)) {
             call_user_func_array(array($this, $name), array(&$files));
         } elseif ($files->getName() == 'files') {
-            array_unshift($this->store_stack,count($this->store));
+            array_unshift($this->store_stack, count($this->store));
             foreach ($files->children() as $file) {
                 $this->xml_string($file);
             }
-            array_shift($this->store_stack)  ;
+            array_shift($this->store_stack);
         } else {
             $dst = $this->opt('dstdir');
             $attributes = array();
@@ -455,7 +487,7 @@ class preprocessor
                 }
                 $this->newpair(
                     (string)$files,
-                    self::ic(SYSTEM,$dst),
+                    self::ic('sys', $dst),
                     $files->getName()
                     , $attributes);
             } else {
@@ -481,7 +513,7 @@ class preprocessor
                     }
                     $this->newpair(
                         realpath($a),
-                        self::ic(SYSTEM,$dst),
+                        self::ic('sys', $dst),
                         $files->getName()
                         , $attributes);
                 }
@@ -500,9 +532,9 @@ class preprocessor
     {
         $this->debug('xml_read:', getcwd());
         $oldcwd = getcwd();
-        $this->log(4,$oldcwd.' '.realpath($xml)."\n") ;
+        $this->log(4, $oldcwd . ' ' . realpath($xml) . "\n");
         if (is_file(realpath($xml))) {
-            $xml=realpath($xml);
+            $xml = realpath($xml);
             chdir(dirname($xml));
             $this->debug('file:', $xml);
             $this->cfg_time($xml);
@@ -597,9 +629,9 @@ class preprocessor
             if (!is_file($dst) || (filemtime($dst) < max($time, $this->cfg_time()))) {
                 $this->decode($s, $code);
                 // удаляем пустые комментарии - последствия корявой обработки вставки секций
-                $s= str_replace("\xEF\xBB\xBF", '', trim($s));
-                $s= preg_replace(array('~^\s*/\*\s*\*/\s*$~m','~\s*/\*\s*\*/~'), array('', ''),$s);
-                file_put_contents($dst, $s) ;
+                $s = str_replace("\xEF\xBB\xBF", '', trim($s));
+                $s = preg_replace(array('~^\s*/\*\s*\*/\s*$~m', '~\s*/\*\s*\*/~'), array('', ''), $s);
+                file_put_contents($dst, $s);
                 $this->betouch($dst, max($time, $this->cfg_time()));
                 return true;
             }
@@ -684,10 +716,9 @@ class preprocessor
                             $this->cfg_time($filemtime);
                         }
                         if ($this->post_process($dstfile, $filemtime, $___m[3]['code'])) {
-                            if(!empty($___m[3]['log_code'])){
-                                $srcfile= iconv($___m[3]['log_code'],'UTF-8',$srcfile);
-                                $dstfile= iconv($___m[3]['log_code'],'UTF-8',$dstfile);
-                            }
+                            $srcfile = self::ic('con', $srcfile);
+                            $dstfile = self::ic('con', $dstfile);
+
                             $this->log(2, "e>$srcfile");
                             if (strlen($srcfile) + strlen($dstfile) > 75) {
                                 $this->log(2, "\n\r  ");
@@ -722,10 +753,9 @@ class preprocessor
                             copy($srcfile, $dstfile);
                         $this->betouch($dstfile, filemtime($srcfile));
 
-                        if(!empty($___m[3]['log_code'])){
-                            $srcfile= iconv($___m[3]['log_code'],'UTF-8',$srcfile);
-                            $dstfile= iconv($___m[3]['log_code'],'UTF-8',$dstfile);
-                        }
+                        $srcfile = self::ic('con', $srcfile);
+                        $dstfile = self::ic('con', $dstfile);
+
                         $this->log(2, "c>$srcfile");
                         if (strlen($srcfile) + strlen($dstfile) > 75) {
                             $this->log(2, "\n\r  ");
