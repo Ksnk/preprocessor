@@ -79,7 +79,8 @@ class preprocessor
             $codepages = self::get_system_codepages();
             $sample = array('utf' => 'UTF-8',
                 'sys' => $codepages[0],
-                'con' => $codepages[1]);
+                'con' => empty($_ENV["SYS_CONSOLE"])?'UTF-8':$codepages[1] );
+      //          'con' => $codepages[1]  );
         }
         if (isset($sample[$code]))
             $code = $sample[$code];

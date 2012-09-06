@@ -68,6 +68,15 @@ echo building init
 %PHPBIN% -q  %PROCESSOR% /Ddst=build /Dtarget=release config.xml
 exit /b 0
 
+:phing
+::
+:: this target copied preprocessor files into phing catalogue.
+::
+echo building phing
+%PHPBIN% -q  %PROCESSOR% /Ddst=build /Dtarget=release config.xml
+echo on
+xcopy build\phing\*.* z:\usr\local\php5\pear\pear\phing\tasks\ext\preprocessor  /Y/E
+exit /b 0
 
 :: **********************************************************************
 :: some errors

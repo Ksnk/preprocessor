@@ -15,6 +15,7 @@ $dir = dirname(__FILE__);
 include_once ($dir . DIRECTORY_SEPARATOR . "preprocessor.class.php");
 include_once ($dir . DIRECTORY_SEPARATOR . "point.ext.php");
 
+//system('set');
 //   date_default_timezone_set('Europe/Moscow');
 
 require_once 'phing/Task.php';
