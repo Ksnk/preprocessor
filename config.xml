@@ -4,7 +4,7 @@
     <!--
         preprocesor files ready to distribute
     -->
-    <var name="version">PHP Preprocessor, written by Ksnk (sergekoriakin@gmail.com)</var>
+    <var name="version">PHP Preprocessor 1.2, written by Ksnk (sergekoriakin@gmail.com)</var>
     <var name="license">License MIT - Serge Koriakin - Jule 2010-2012</var>
 
     <import name="git.hat.xml"/>

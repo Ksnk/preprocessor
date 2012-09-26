@@ -88,8 +88,11 @@ class POINT
     {
         if (self::$ob_count == 0) return;
         self::$ob_count--;
+
         //$contents=preg_replace('/^\s+|\s+$/','',ob_get_contents());
         $contents = ob_get_contents();
+        // удалить открывающие комментарии в конце блока
+        $contents=preg_replace('/\/\*\s*$/','',$contents);
         ob_end_clean();
         //echo $contents;
         self::inline(self::$cur_point, $contents);
