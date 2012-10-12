@@ -502,6 +502,7 @@ class preprocessor
                 // $this->log(2,$dir.(string)$file);
                 $pdir = '';
                 foreach ($this->findByMask($dir . $str_file) as $a) {
+                    if(is_dir($a)) continue;
                     list($dst, $name) = $this->opt('dstdir', 'name');
                     $pdir = dirname(substr($a, strlen($dir)));
                     if (!empty($pdir)) $pdir .= '/';
@@ -750,8 +751,15 @@ class preprocessor
                             $s = file_get_contents($srcfile);
                             $this->decode($s, $___m[3]['code']);
                             file_put_contents($dstfile, $s);
-                        } else
-                            copy($srcfile, $dstfile);
+                        } else {
+                            $data = file_get_contents($srcfile);
+
+                            $handle = fopen($dstfile, "w");
+                            fwrite($handle, $data);
+                            fclose($handle);
+                           // was: copy($srcfile, $dstfile);
+                        }
+
                         $this->betouch($dstfile, filemtime($srcfile));
 
                         $srcfile = self::ic('con', $srcfile);
