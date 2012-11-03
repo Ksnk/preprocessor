@@ -501,7 +501,11 @@ class preprocessor
                 }
                 // $this->log(2,$dir.(string)$file);
                 $pdir = '';
-                foreach ($this->findByMask($dir . $str_file) as $a) {
+                $flist= $this->findByMask($dir . $str_file);
+                if(count($flist)==0){
+                    $this->log(3, sprintf("No  files found at  `%s` (cwd-`%s`) \n", $dir . $str_file,getcwd()));
+                }
+                foreach ($flist as $a) {
                     if(is_dir($a)) continue;
                     list($dst, $name) = $this->opt('dstdir', 'name');
                     $pdir = dirname(substr($a, strlen($dir)));
