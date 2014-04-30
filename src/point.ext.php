@@ -55,7 +55,6 @@ class POINT
         if (!isset(self::$points[$name]))
             self::$points[$name] = array();
         self::$eval_idx++;
-        //  $GLOBALS['preprocessor']->log(2,'try to hold "'.$name.'" file "'.substr(self::$eval_src,0,80).'" '.self::$eval_idx."\n");
 
         if (!empty(self::$eval_src) && isset(self::$point_stat[self::$eval_src . '_' . self::$eval_idx])) {
             preprocessor::log(2, 'second try to hold "' . $name . '" file "' . substr(self::$eval_src, 0, 80) . '" '
@@ -63,7 +62,9 @@ class POINT
             return;
         }
         self::$point_stat[self::$eval_src . '_' . self::$eval_idx] = true;
-        self::$points[$name][] = preg_replace('/^\s+|^\*\/|\s+$|\/\*$/', '', $contents);
+        // чистим точку от /* ... */ хвостовых/начальных комментариев
+        $contents = preg_replace('/^\s+|^\*\/|[ \t]*$|\/\*\s*$/', '', $contents);
+        self::$points[$name][] = $contents;
     }
 
     /**
@@ -89,10 +90,8 @@ class POINT
         if (self::$ob_count == 0) return;
         self::$ob_count--;
 
-        //$contents=preg_replace('/^\s+|\s+$/','',ob_get_contents());
         $contents = ob_get_contents();
         // удалить открывающие комментарии в конце блока
-        $contents=preg_replace('/\/\*\s*$/','',$contents);
         ob_end_clean();
         //echo $contents;
         self::inline(self::$cur_point, $contents);
@@ -126,12 +125,13 @@ class POINT
         return self::$placeholder[$m[1]];
     }
 
-    static function filter($s,$filter){
-        switch ($filter){
+    static function filter($s, $filter)
+    {
+        switch ($filter) {
             case '2js':
                 return str_replace(
-                    array('\\',"\n",'"'),
-                    array('\\\\','\n','\"'),
+                    array('\\', "\n", '"'),
+                    array('\\\\', '\n', '\"'),
                     $s);
                 break;
             case 'jscompress':
@@ -142,8 +142,8 @@ class POINT
                 break;
             case 'csscompress':
                 return preg_replace(
-                    array('/<!--.*?-->/s', '#/\*.*?\*/#s', '#//.*?#',  '/\s+/', '/^\\s+|\\s+$/m','#\s*({|})\s*#'),
-                    array('', '', ' ', ' ', '','\1'),
+                    array('/<!--.*?-->/s', '#/\*.*?\*/#s', '#//.*?#', '/\s+/', '/^\\s+|\\s+$/m', '#\s*({|})\s*#'),
+                    array('', '', ' ', ' ', '', '\1'),
                     $s);
                 break;
             case 'htmlcompress':
@@ -161,24 +161,28 @@ class POINT
      * вывод содержимого точки. При выводе применяются фильтры, которые позволяют вставляться
      * в комментарии (пустой фильтр), как часть комментария (фильтр comment), с текстовой обработкой (wiki)
      * @param $point_name
-     * @param string $filter
+     * @param string $filters
+     * @internal param string $filter
      * @return mixed|string
      */
     static function get($point_name, $filters = '')
     {
         global $preprocessor;
-        //echo "insert_point $point_name */\n\r";
         $s = '';
         if (isset(self::$points[$point_name]))
             $s = join(self::$points[$point_name], "\r\n");
 
         foreach (explode('|', $filters) as $filter) {
+            $fin_string = '';
+            $start_string = '';
             if ($filter == '' || $filter == 'comment') {
                 $ss = $preprocessor->obget();
-                if (preg_match('~(\s+\*)\s*$|(/\*+)\s*$|(//)\s*$|(\#\#\s*)$~s', $ss, $m)) {
+                if (preg_match('~(?:(/\*+)|(\s\*)|(//)|(\#\#\s*)|(<!\-+))[ \t]*$~s', $ss, $m)) {
                     if (!empty($m[1])) {
                         // javascript comment
                         $filter = $filter == 'comment' ? 'jscomment' : 'php_comment';
+                        $fin_string = '*/';
+                        $start_string = '/*';
                     } elseif (!empty($m[2])) {
                         // javascript comment
                         $filter = $filter == 'comment' ? 'jscomment' : 'php_comment';
@@ -187,6 +191,10 @@ class POINT
                         $filter = $filter == 'comment' ? 'everyline_comment' : 'line_comment';
                     } elseif (!empty($m[4])) {
                         $filter = $filter == 'comment' ? 'tplcomment' : 'line_comment';
+                    } elseif (!empty($m[5])) {
+                        $filter = $filter == 'comment' ? 'tplcomment' : 'line_comment';
+                        $fin_string = ' -->';
+                        $start_string = '<!-- ';
                     }
                 }
                 preprocessor::log(4, 'point: ' . $point_name . ' filter :"' . $filter . '"' . "\n");
@@ -238,7 +246,7 @@ class POINT
                     break;
                 case 'line_comment':
                     // перед строкой стоит строковый комменарий - выводим с новой строки
-                    $s = ' ----point::' . $point_name . "----\r\n" . $s . "\r\n";
+                    $s = ' ---- point::' . $point_name . " ---- " . $fin_string . "\r\n" . $s . "\r\n" . $start_string;
                     break;
                 case 'everyline_comment':
                     // каждая строка начинается с комментария //
@@ -262,9 +270,9 @@ class POINT
                     break;
                 case 'php_comment':
                     // выводим php код в окружении закрывающего - открывающего комментария
-                    $s = '*/
+                    $s = ' --- point::' . $point_name . " --- " . $fin_string . '
 ' . $s . '
-/*';
+' . $start_string;
                     break;
                 case 'html2js':
                     // выводим html для вставки в изображение строки с двойными кавычками.
@@ -320,27 +328,27 @@ class POINT
                     $s = preg_replace_callback('#(<script[^>]*>)(.*?)(</script[^>]*>)#is', array('POINT', '_replace'), $s);
                     for (; $start < self::$curplaceloder; $start++) {
                         self::$placeholder[$start] = preg_replace_callback('#@(\d+)@#'
-                            , array('POINT', '_return'),self::filter(self::$placeholder[$start],'jscompress')
-                            );
+                            , array('POINT', '_return'), self::filter(self::$placeholder[$start], 'jscompress')
+                        );
                     }
                     //стили
                     $start = self::$curplaceloder;
                     $s = preg_replace_callback('#(<style[^>]*>)(.*?)(</style[^>]*>)#is', array('POINT', '_replace'), $s);
                     for (; $start < self::$curplaceloder; $start++) {
                         self::$placeholder[$start] = preg_replace_callback('#@(\d+)@#'
-                            , array('POINT', '_return'),self::filter(self::$placeholder[$start],'csscompress')
+                            , array('POINT', '_return'), self::filter(self::$placeholder[$start], 'csscompress')
                         );
                     }
                     // пробелы
-                    $s = self::filter($s,'htmlcompress');
+                    $s = self::filter($s, 'htmlcompress');
                     $s = preg_replace_callback('#@(\d+)@#', array('POINT', '_return'), $s);
                     break;
                 case 'css2js':
                     // выводим css для вставки в изображение строки с двойными кавычками.
-                    $s=self::filter(self::filter($s,'csscompress'),'2js');
+                    $s = self::filter(self::filter($s, 'csscompress'), '2js');
                     break;
                 default:
-                    $s=self::filter($s,$filter);
+                    $s = self::filter($s, $filter);
             }
         }
         return $s;

@@ -42,6 +42,8 @@ class PreprocessTask extends Task
     private $parameter;
     private $files = array();
     private $file;
+    private $xconfigs = array();
+    private $xconfig;
 
     private $force = false;
 
@@ -102,6 +104,12 @@ class PreprocessTask extends Task
         $this->files[] = $this->file;
         return $this->file;
     }
+    public function createConfig()
+    {
+        $this->xconfig = new Config();
+        $this->xconfigs[] = $this->xconfig;
+        return $this->xconfig;
+    }
 
     public function init()
     {
@@ -147,6 +155,15 @@ class PreprocessTask extends Task
             POINT::clear();
             $this->preprocessor->xml_read($this->config);
             $this->preprocessor->process();
+        } else if (!empty($this->xconfigs)) {
+            $config='';
+            foreach ($this->xconfigs as $v) {
+                $config.= $v->getText();
+            }
+            $this->log('making "' . $config . '"', Project::MSG_WARN);
+            POINT::clear();
+            $this->preprocessor->xml_read($config);
+            $this->preprocessor->process();
         }
     }
 
@@ -180,6 +197,74 @@ class Param extends Parameter
     function getFile()
     {
         return $this->file;
+    }
+
+}
+/**
+ * additional class to cover file parameter
+ * @subpackage  phing
+ */
+class Config extends Parameter
+{
+
+    private $files = array();
+    private $file;
+    private $text = '';
+    private $Dstdir = '';
+    private $Dir = '';
+
+    public function addText($text)
+    {
+        $this->text .= $text;
+    }
+
+    public function getText()
+    {
+        return $this->text;
+    }
+
+    function createFile()
+    {
+        $this->file = new Files();
+        $this->files[] = $this->file;
+        return $this->file;
+    }
+
+    function setDstdir($dstdir)
+    {
+        return $this->dstdir = $dstdir;
+    }
+
+    function getDstdir()
+    {
+        return $this->dstdir;
+    }
+
+    function setDir($dir)
+    {
+        return $this->dir = $dir;
+    }
+
+    function getDir()
+    {
+        return $this->dir;
+    }
+
+    function getFile()
+    {
+        return $this->files;
+    }
+
+    function createEcho()
+    {
+        $this->file = new Files();
+        $this->files[] = $this->file;
+        return $this->file;
+    }
+
+    function getEcho()
+    {
+        return $this->files;
     }
 
 }

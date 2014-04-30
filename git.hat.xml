@@ -12,7 +12,7 @@
 
     <files>
         <echo><![CDATA[<%
-        $separator= str_repeat('-',90);
+        $separator= str_repeat('-',82);
         if(is_dir('.svn')){
         // so it's svn project
             $output=array();

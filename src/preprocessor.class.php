@@ -301,7 +301,7 @@ class preprocessor
                 return;
         }
         if (empty($value))
-            $value = (string)$files['default'];
+            $value = $this->evd((string)$files['default']);
         if (!empty($value))
             $this->export((string)$files['name'], $value);
     }
@@ -637,8 +637,12 @@ class preprocessor
                 // удаляем пустые комментарии - последствия корявой обработки вставки секций
                 $s = str_replace("\xEF\xBB\xBF", '', trim($s));
                 $s = preg_replace(array('~^\s*/\*\s*\*/\s*$~m', '~\s*/\*\s*\*/~'), array('', ''), $s);
-                file_put_contents($dst, $s);
-                $this->betouch($dst, max($time, $this->cfg_time()));
+                if(is_writeable($dst) && md5_file($dst)==md5($s)){
+                    $this->log(1,'~');
+                } else {
+                    file_put_contents($dst, $s);
+                    $this->betouch($dst, max($time, $this->cfg_time()));
+                }
                 return true;
             }
         }
@@ -752,17 +756,12 @@ class preprocessor
                     if (!is_file($dstfile) || (filemtime($dstfile) < filemtime($srcfile))) {
 
                         if (!empty($___m[3]['code'])) {
-                            $s = file_get_contents($srcfile);
-                            $this->decode($s, $___m[3]['code']);
-                            file_put_contents($dstfile, $s);
+                            $data = file_get_contents($srcfile);
+                            $this->decode($data, $___m[3]['code']);
                         } else {
                             $data = file_get_contents($srcfile);
-
-                            $handle = fopen($dstfile, "w");
-                            fwrite($handle, $data);
-                            fclose($handle);
-                           // was: copy($srcfile, $dstfile);
                         }
+                        file_put_contents($dstfile, $data);
 
                         $this->betouch($dstfile, filemtime($srcfile));
 

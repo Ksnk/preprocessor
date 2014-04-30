@@ -52,7 +52,7 @@ XML;
 
         $preprocessor->xml_read($config);
         $store=$opt->getValue($preprocessor);
-        $this->assertEquals(count($store),3) ;
+        $this->assertEquals(count($store),8) ;
 
 
         $this->removeTestFiles('test1');
