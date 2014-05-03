@@ -84,13 +84,14 @@ HTML;
 </config>
 HTML;
         $result=<<<HTML
-
-//  ----point::xxx----
+//  ---- point::xxx ----
 it's a text
 
-##  ----point::xxx----
+
+##  ---- point::xxx ----
 it's a text
 
+/*  --- point::xxx --- */
 it's a text
 HTML;
         $preprocessor=preprocessor::instance();

@@ -246,7 +246,7 @@ class POINT
                     break;
                 case 'line_comment':
                     // перед строкой стоит строковый комменарий - выводим с новой строки
-                    $s = ' ---- point::' . $point_name . " ---- " . $fin_string . "\r\n" . $s . "\r\n" . $start_string;
+                    $s = ' ---- point::' . $point_name . " ----" . (empty($fin_string)?'':' '.$fin_string) . "\r\n" . $s . "\r\n" . $start_string;
                     break;
                 case 'everyline_comment':
                     // каждая строка начинается с комментария //
