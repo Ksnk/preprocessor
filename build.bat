@@ -16,7 +16,7 @@ if exist ..\env.bat call ..\env.bat
 
 :: anyway, let's setup default variables
 ::
-if "%PHPBIN%"==""    set PHPBIN=Z:\usr\local\php5\php.exe
+if "%PHPBIN%"==""    set PHPBIN=d:\Winginx\php54\php.exe
 if "%PROCESSOR%"=="" set PROCESSOR=build\preprocessor.php
 
 ::  **********************************************************************
