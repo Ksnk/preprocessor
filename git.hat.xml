@@ -12,6 +12,21 @@
 
     <files>
         <echo><![CDATA[<%
+/*
+    $par=array(
+        'iconv.input_encoding'=>'UTF-8',
+        'iconv.internal_encoding'=>'UTF-8',
+        'iconv.output_encoding'=>'UTF-8',
+    );
+    if(isset($_ENV['PROMPT'])){
+       // $par['iconv.output_encoding']='cp866';
+       // $par['iconv.input_encoding']='cp866';
+    }
+
+    ob_start('ob_iconv_handler');
+    foreach($par as $k=>$v)ini_set($k,$v);
+*/
+$tag='xxx';
         $separator= str_repeat('-',82);
         if(is_dir('.svn')){
         // so it's svn project
@@ -36,7 +51,7 @@ $Id: '.$version.'
 
             // get the last tag from output
             $output=array();
-            $tag = exec($git." describe --tags", $output);
+            //$tag = exec($git." describe --tags", $output);
             // get a last string from output
             $output=array();
             $git_url = exec($git." remote -v", $output);

@@ -315,7 +315,7 @@ class preprocessor
     {
         if ((string)$files['name'] == '')
             $this->log(0, 'XML: there is no NAME parameter of IMPORT tag.'); // faked variable
-        $this->xml_read((string)$files['name']);
+        $this->xml_read($this->evd((string)$files['name']));
     }
 
     function handle_remove(&$files)

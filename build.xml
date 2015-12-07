@@ -27,7 +27,7 @@
     </target>
 
     <target name="phing" depends="init">
-        <copy todir="z:/usr/local/php5/pear/pear/phing/tasks/ext/preprocessor" overwrite="yes">
+        <copy todir="d:/Winginx/pear/pear/phing/classes/phing/tasks/ext/preprocessor" overwrite="yes">
             <fileset dir="build/phing">
                 <include name="*.*" />
                 <include name="**/*.*" />
@@ -75,7 +75,7 @@
         logoutput="true"/>
 
     </target>
-
+<!--
     <target name="update ksnk.github.com" description="copy builded files to ksnk.github folder">
         <delete file="../ksnk.github.com/preprocessor/preprocessor.tar.gz"/>
         <tar destfile="../ksnk.github.com/preprocessor/preprocessor.tar.gz" compression="gzip">
@@ -94,7 +94,7 @@
             </fileset>
         </tar>
     </target>
-
+-->
     <target name="support">
         <preprocess config="rebuild.readme.xml"/>
     </target>

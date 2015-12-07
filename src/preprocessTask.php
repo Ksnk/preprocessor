@@ -155,6 +155,13 @@ class PreprocessTask extends Task
             POINT::clear();
             $this->preprocessor->xml_read($this->config);
             $this->preprocessor->process();
+        } else if ( !empty($this->files)) {
+
+            POINT::clear();
+            foreach ($this->files as $v) {
+                $this->preprocessor->newpair($v->getText(),'','echo');
+            }
+            $this->preprocessor->process();
         } else if (!empty($this->xconfigs)) {
             $config='';
             foreach ($this->xconfigs as $v) {
@@ -329,6 +336,11 @@ class Files extends Parameter
     function getEcho()
     {
         return $this->files;
+    }
+
+    function getText()
+    {
+        return $this->text;
     }
 
 }
