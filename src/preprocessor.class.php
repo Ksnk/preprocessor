@@ -725,6 +725,7 @@ class preprocessor
                         if (empty($dstfile)) {
                             $this->cfg_time($filemtime);
                         }
+                        if(empty($___m[3]['code']))$___m[3]['code']='';
                         if ($this->post_process($dstfile, $filemtime, $___m[3]['code'])) {
                             $srcfile = self::ic('con', $srcfile);
                             $dstfile = self::ic('con', $dstfile);
